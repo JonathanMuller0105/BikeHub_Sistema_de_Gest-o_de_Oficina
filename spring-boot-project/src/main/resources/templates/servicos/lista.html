@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!--
+  ======================================================================
+  TEMPLATE THYMELEAF: LISTA DE ORDENS DE SERVIÇO (templates/servicos/lista.html)
+  ======================================================================
+  - Exibe a tabela de ordens de serviço com filtros por status.
+  - Ações rápidas de avanço de status (Pendente -> Análise -> Manutenção -> Pronto -> Entregue).
+  - Badges coloridos customizados para cada etapa do workflow.
+-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BikeHub - Ordens de Serviço da Oficina</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="../../static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-circle-sm">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+                </div>
+                <h2>Bike<span>Hub</span></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item"><a th:href="@{/dashboard}" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Painel Geral</span></a></li>
+                    <li class="nav-item"><a th:href="@{/clientes}" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Clientes</span></a></li>
+                    <li class="nav-item"><a th:href="@{/servicos}" class="nav-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><span>Ordens de Serviço</span></a></li>
+                    <li class="nav-item"><a th:href="@{/vendas}" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg><span>Venda de Semi-Novas</span></a></li>
+                    <li class="nav-item"><a th:href="@{/aluguel}" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg><span>Aluguel / Locação</span></a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" th:text="${#strings.substring(usuarioLogado.nomeCompleto, 0, 2)}">AD</div>
+                    <div class="user-details"><p class="user-name" th:text="${usuarioLogado.nomeCompleto}">Administrador</p><p class="user-role" th:text="${usuarioLogado.perfil}">ADMIN</p></div>
+                </div>
+                <a th:href="@{/logout}" class="btn-logout" title="Encerrar Sessão"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h1 class="page-title">Ordens de Serviço (Oficina)</h1>
+                    <p class="page-subtitle">Acompanhamento e controle de status de manutenções mecânicas</p>
+                </div>
+                <div>
+                    <a th:href="@{/servicos/novo}" class="btn btn-primary" id="btnNovaOS">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>+ Abrir Nova OS</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Mensagens Flash -->
+            <div th:if="${mensagemSucesso}" class="alert alert-success" role="status">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span th:text="${mensagemSucesso}">Status atualizado com sucesso!</span>
+            </div>
+            <div th:if="${mensagemErro}" class="alert alert-danger" role="alert">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span th:text="${mensagemErro}">Erro na operação.</span>
+            </div>
+
+            <!-- Filtros de Status (Abas / Pílulas) -->
+            <div class="filter-pills-bar">
+                <a th:href="@{/servicos}" 
+                   class="filter-pill" 
+                   th:classappend="${statusSelecionado == null} ? 'active' : ''">
+                    Todas as OS
+                </a>
+                <a th:each="st : ${todosStatus}"
+                   th:href="@{/servicos(status=${st})}"
+                   class="filter-pill"
+                   th:classappend="${statusSelecionado == st} ? 'active' : ''"
+                   th:text="${st.descricao}">
+                    Pendente
+                </a>
+            </div>
+
+            <!-- Tabela de Ordens de Serviço -->
+            <div class="section-card">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th># OS</th>
+                                <th>Cliente</th>
+                                <th>Bicicleta</th>
+                                <th>Serviço / Peças</th>
+                                <th>Valor</th>
+                                <th>Data Prometida</th>
+                                <th>Status Atual</th>
+                                <th>Alterar Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="os : ${servicos}">
+                                <td><strong th:text="${'#' + os.id}">#1</strong></td>
+                                <td>
+                                    <strong th:text="${os.cliente.nome}">Carlos Silveira</strong>
+                                    <div class="text-muted-sm" th:text="${os.cliente.telefone}">(11) 98765-4321</div>
+                                </td>
+                                <td>
+                                    <div class="bike-info-cell">
+                                        <span class="bike-brand" th:text="${os.bicicleta.marca + ' ' + os.bicicleta.modelo}">Caloi Explorer</span>
+                                        <span class="text-muted-sm" th:text="${os.bicicleta.cor + ' (' + os.bicicleta.ano + ')'}">Azul (2022)</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <p class="service-desc-text" th:text="${os.descricao}">Revisão Completa e troca de corrente</p>
+                                </td>
+                                <td>
+                                    <span class="price-highlight" th:text="${'R$ ' + #numbers.formatDecimal(os.valor, 1, 'POINT', 2, 'COMMA')}">
+                                        R$ 280,00
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:text="${#temporals.format(os.dataEntrega, 'dd/MM/yyyy')}">26/08/2026</span>
+                                </td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${os.status.classeCss}" 
+                                          th:text="${os.status.descricao}">
+                                        Em Manutenção
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- Ações Rápidas de Transição de Status -->
+                                    <div class="status-quick-select">
+                                        <select class="form-control form-control-sm select-status-ajax" 
+                                                th:data-os-id="${os.id}"
+                                                onchange="window.location.href='/servicos/' + this.getAttribute('data-os-id') + '/status/' + this.value">
+                                            <option th:each="st : ${todosStatus}" 
+                                                    th:value="${st}" 
+                                                    th:text="${st.descricao}" 
+                                                    th:selected="${st == os.status}">
+                                                Pendente
+                                            </option>
+                                        </select>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a th:href="@{/servicos/excluir/{id}(id=${os.id})}" 
+                                       class="btn-action-danger" 
+                                       title="Excluir OS"
+                                       onclick="return confirm('Deseja realmente excluir esta Ordem de Serviço?');">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr th:if="${#lists.isEmpty(servicos)}">
+                                <td colspan="9" class="empty-state-cell">
+                                    <div class="empty-state">
+                                        <h3>Nenhuma Ordem de Serviço encontrada</h3>
+                                        <p>Não existem ordens de serviço no status selecionado.</p>
+                                        <a th:href="@{/servicos/novo}" class="btn btn-primary btn-sm">+ Abrir Nova OS</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script th:src="@{/js/script.js}" src="../../static/js/script.js"></script>
+</body>
+</html>

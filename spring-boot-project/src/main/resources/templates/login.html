@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!--
+  ======================================================================
+  TEMPLATE THYMELEAF: TELA DE LOGIN (templates/login.html)
+  ======================================================================
+  - th:action="@{/login}": Processa o envio seguro do formulário via POST.
+  - th:if="${mensagemErro}": Exibe mensagens de feedback com validação condicional.
+  - Comentários didáticos indicando as credenciais de teste para o avaliador.
+-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BikeHub - Login do Sistema</title>
+    <!-- Inclusão do CSS global do projeto BikeHub -->
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="../static/css/style.css">
+    <!-- Fonte Google Inter / Outfit para visual moderno e legibilidade -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+
+    <!-- Container centralizado para a caixa de autenticação -->
+    <main class="login-wrapper">
+        <div class="login-card" id="loginCard">
+            
+            <!-- Logotipo e Cabeçalho do Card -->
+            <header class="login-header">
+                <div class="logo-circle" aria-hidden="true">
+                    <!-- Ícone estilizado em SVG representando a engrenagem e bicicleta -->
+                    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18.5" cy="17.5" r="3.5"/>
+                        <circle cx="5.5" cy="17.5" r="3.5"/>
+                        <circle cx="15" cy="5" r="1"/>
+                        <path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
+                    </svg>
+                </div>
+                <h1 class="login-title">Bike<span>Hub</span></h1>
+                <p class="login-subtitle">Gestão de Oficina, Vendas e Aluguel de Bicicletas</p>
+            </header>
+
+            <!-- ======================================================= -->
+            <!-- BLOCO DE MENSAGENS CONDICIONAIS THYMELEAF (th:if)      -->
+            <!-- ======================================================= -->
+            <!-- Alerta de Erro de Autenticação -->
+            <div th:if="${mensagemErro}" class="alert alert-danger" role="alert" id="alertaErro">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span th:text="${mensagemErro}">Usuário ou senha inválidos.</span>
+            </div>
+
+            <!-- Alerta de Sucesso ou Logout -->
+            <div th:if="${mensagemSucesso}" class="alert alert-success" role="status" id="alertaSucesso">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span th:text="${mensagemSucesso}">Sessão encerrada com sucesso.</span>
+            </div>
+
+            <!-- ======================================================= -->
+            <!-- FORMULÁRIO DE LOGIN                                    -->
+            <!-- ======================================================= -->
+            <form th:action="@{/login}" method="POST" class="login-form" id="formLogin">
+                
+                <!-- Campo: Usuário (Login) -->
+                <div class="form-group">
+                    <label for="username" class="form-label">Usuário de Acesso</label>
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <input type="text"
+                               id="username"
+                               name="username"
+                               th:value="${usernameDigitado}"
+                               class="form-control"
+                               placeholder="Digite seu usuário (ex: Admin1234)"
+                               required
+                               autocomplete="username"
+                               autofocus>
+                    </div>
+                </div>
+
+                <!-- Campo: Senha -->
+                <div class="form-group">
+                    <label for="senha" class="form-label">Senha</label>
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <input type="password"
+                               id="senha"
+                               name="senha"
+                               class="form-control"
+                               placeholder="Digite sua senha"
+                               required
+                               autocomplete="current-password">
+                    </div>
+                </div>
+
+                <!-- Botão de Submissão -->
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnEntrar">
+                    <span>Entrar no Sistema</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- ======================================================= -->
+            <!-- CREDENCIAIS PADRÃO DE TESTE (Didática para Avaliação)    -->
+            <!-- ======================================================= -->
+            <footer class="login-footer-info">
+                <div class="credentials-badge">
+                    <p class="cred-title"><strong>Credenciais Padrão do Administrador:</strong></p>
+                    <p class="cred-item">Usuário: <code>Admin1234</code></p>
+                    <p class="cred-item">Senha: <code>Admin123456</code></p>
+                    <button type="button" class="btn-link" id="btnPreencherAdmin" onclick="preencherCredenciaisAdmin()">
+                        Preencher Automaticamente
+                    </button>
+                </div>
+            </footer>
+
+        </div>
+    </main>
+
+    <!-- Script com lógica para preenchimento rápido e validação visual -->
+    <script th:src="@{/js/script.js}" src="../static/js/script.js"></script>
+    <script>
+        // Função auxiliar para preencher os campos com o usuário padrão solicitado
+        function preencherCredenciaisAdmin() {
+            document.getElementById('username').value = 'Admin1234';
+            document.getElementById('senha').value = 'Admin123456';
+        }
+    </script>
+</body>
+</html>

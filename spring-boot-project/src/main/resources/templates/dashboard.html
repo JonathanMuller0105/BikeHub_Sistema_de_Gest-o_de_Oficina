@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<!--
+  ======================================================================
+  TEMPLATE THYMELEAF: PAINEL PRINCIPAL / DASHBOARD (templates/dashboard.html)
+  ======================================================================
+  - th:each: Itera sobre listas de dados dinâmicos como atividades recentes.
+  - th:text / th:classappend: Formata textos, badges e classes visuais conforme os status.
+  - Menu lateral responsivo com indicação de página ativa.
+-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BikeHub - Painel de Controle</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="../static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+
+    <!-- Layout Principal: Sidebar + Conteúdo -->
+    <div class="app-layout">
+
+        <!-- ======================================================= -->
+        <!-- MENU LATERAL (SIDEBAR DE NAVEGAÇÃO)                     -->
+        <!-- ======================================================= -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-circle-sm">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="18.5" cy="17.5" r="3.5"/>
+                        <circle cx="5.5" cy="17.5" r="3.5"/>
+                        <circle cx="15" cy="5" r="1"/>
+                        <path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
+                    </svg>
+                </div>
+                <h2>Bike<span>Hub</span></h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <!-- Link: Painel (Dashboard) -->
+                    <li class="nav-item">
+                        <a th:href="@{/dashboard}" class="nav-link active" id="navDashboard">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span>Painel Geral</span>
+                        </a>
+                    </li>
+
+                    <!-- Link: Clientes e Bicicletas -->
+                    <li class="nav-item">
+                        <a th:href="@{/clientes}" class="nav-link" id="navClientes">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span>Clientes</span>
+                        </a>
+                    </li>
+
+                    <!-- Link: Ordens de Serviço (Oficina) -->
+                    <li class="nav-item">
+                        <a th:href="@{/servicos}" class="nav-link" id="navServicos">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                            </svg>
+                            <span>Ordens de Serviço</span>
+                        </a>
+                    </li>
+
+                    <!-- Link: Venda de Semi-Novas -->
+                    <li class="nav-item">
+                        <a th:href="@{/vendas}" class="nav-link" id="navVendas">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span>Venda de Semi-Novas</span>
+                        </a>
+                    </li>
+
+                    <!-- Link: Aluguel de Bicicletas -->
+                    <li class="nav-item">
+                        <a th:href="@{/aluguel}" class="nav-link" id="navAluguel">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span>Aluguel / Locação</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Rodapé da Barra Lateral com Dados do Usuário e Logout -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" th:text="${#strings.substring(usuarioLogado.nomeCompleto, 0, 2)}">AD</div>
+                    <div class="user-details">
+                        <p class="user-name" th:text="${usuarioLogado.nomeCompleto}">Administrador</p>
+                        <p class="user-role" th:text="${usuarioLogado.perfil}">ADMIN</p>
+                    </div>
+                </div>
+                <a th:href="@{/logout}" class="btn-logout" title="Encerrar Sessão" id="btnLogout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </a>
+            </div>
+        </aside>
+
+        <!-- ======================================================= -->
+        <!-- ÁREA DE CONTEÚDO PRINCIPAL                              -->
+        <!-- ======================================================= -->
+        <main class="main-content">
+            
+            <!-- Topbar com Título da Tela e Botões de Ação Rápida -->
+            <header class="topbar">
+                <div>
+                    <h1 class="page-title">Painel de Gestão BikeHub</h1>
+                    <p class="page-subtitle">Visão geral da oficina mecânica, ordens de serviço e catálogo comercial</p>
+                </div>
+                <div class="topbar-actions">
+                    <a th:href="@{/clientes/novo}" class="btn btn-outline" id="btnNovoClienteRapido">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>+ Novo Cliente</span>
+                    </a>
+                    <a th:href="@{/servicos/novo}" class="btn btn-primary" id="btnNovaOSRapida">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>+ Abrir Nova OS</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- ======================================================= -->
+            <!-- GRADE DE CARTÕES DE MÉTRICAS AGREGADAS (DASHBOARD)     -->
+            <!-- ======================================================= -->
+            <section class="metrics-grid">
+                
+                <!-- Card 1: Ordens de Serviço em Aberto -->
+                <div class="metric-card card-highlight">
+                    <div class="metric-icon-box icon-orange">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <span class="metric-label">OS Ativas na Oficina</span>
+                        <h3 class="metric-value" th:text="${metricasOficina.totalAtivas}">4</h3>
+                        <span class="metric-subtext">Manutenções em andamento</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Faturamento Total de Serviços Entregues -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-green">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <span class="metric-label">Faturamento da Oficina</span>
+                        <h3 class="metric-value" th:text="${'R$ ' + #numbers.formatDecimal(metricasOficina.faturamentoTotal, 1, 'POINT', 2, 'COMMA')}">R$ 1.840,00</h3>
+                        <span class="metric-subtext">Total de OS entregues</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Locações Ativas -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-blue">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <span class="metric-label">Aluguéis Ativos</span>
+                        <h3 class="metric-value" th:text="${metricasComerciais.locacoesAtivas}">2</h3>
+                        <span class="metric-subtext" th:text="${metricasComerciais.locacoesDisponiveis + ' bikes disponíveis'}">5 bikes disponíveis</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Estoque de Semi-Novas para Venda -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-navy">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <span class="metric-label">Semi-Novas em Estoque</span>
+                        <h3 class="metric-value" th:text="${metricasComerciais.vendasDisponiveis}">7</h3>
+                        <span class="metric-subtext">Prontas para venda</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- FLUXO DE STATUS DA OFICINA MECÂNICA (PIPELINE)          -->
+            <!-- ======================================================= -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2>Ciclo de Manutenção das Ordens de Serviço</h2>
+                    <a th:href="@{/servicos}" class="section-link">Ver todas as OS &rarr;</a>
+                </div>
+
+                <div class="status-pipeline-grid">
+                    
+                    <div class="pipeline-col">
+                        <div class="pipeline-header bg-pendente">
+                            <span class="pipeline-dot dot-pendente"></span>
+                            <span class="pipeline-title">Pendentes</span>
+                            <span class="pipeline-badge" th:text="${metricasOficina.pendentes}">1</span>
+                        </div>
+                        <p class="pipeline-desc">Aguardando início de avaliação mecânica</p>
+                    </div>
+
+                    <div class="pipeline-col">
+                        <div class="pipeline-header bg-analise">
+                            <span class="pipeline-dot dot-analise"></span>
+                            <span class="pipeline-title">Em Análise</span>
+                            <span class="pipeline-badge" th:text="${metricasOficina.emAnalise}">1</span>
+                        </div>
+                        <p class="pipeline-desc">Diagnóstico de problemas e peças</p>
+                    </div>
+
+                    <div class="pipeline-col">
+                        <div class="pipeline-header bg-manutencao">
+                            <span class="pipeline-dot dot-manutencao"></span>
+                            <span class="pipeline-title">Em Manutenção</span>
+                            <span class="pipeline-badge" th:text="${metricasOficina.emManutencao}">1</span>
+                        </div>
+                        <p class="pipeline-desc">Execução de reparos e regulagens</p>
+                    </div>
+
+                    <div class="pipeline-col">
+                        <div class="pipeline-header bg-pronto">
+                            <span class="pipeline-dot dot-pronto"></span>
+                            <span class="pipeline-title">Pronto para Retirada</span>
+                            <span class="pipeline-badge" th:text="${metricasOficina.prontoRetirada}">1</span>
+                        </div>
+                        <p class="pipeline-desc">Revisão finalizada, aguardando cliente</p>
+                    </div>
+
+                    <div class="pipeline-col">
+                        <div class="pipeline-header bg-entregue">
+                            <span class="pipeline-dot dot-entregue"></span>
+                            <span class="pipeline-title">Entregues</span>
+                            <span class="pipeline-badge" th:text="${metricasOficina.entregues}">1</span>
+                        </div>
+                        <p class="pipeline-desc">Serviço concluído e faturado</p>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- ATIVIDADES RECENTES NA OFICINA                          -->
+            <!-- ======================================================= -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2>Últimas Ordens de Serviço Abertas</h2>
+                    <a th:href="@{/servicos/novo}" class="btn btn-sm btn-primary">+ Nova OS</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th># OS</th>
+                                <th>Cliente</th>
+                                <th>Bicicleta</th>
+                                <th>Descrição do Serviço</th>
+                                <th>Valor</th>
+                                <th>Entrega Prevista</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Iteração com Thymeleaf (th:each) sobre os serviços recentes -->
+                            <tr th:each="os : ${atividadesRecentes}">
+                                <td><strong th:text="${'#' + os.id}">#1</strong></td>
+                                <td th:text="${os.cliente.nome}">Carlos Silveira</td>
+                                <td th:text="${os.bicicleta.marca + ' ' + os.bicicleta.modelo}">Caloi Explorer</td>
+                                <td class="text-truncate" style="max-width: 260px;" th:text="${os.descricao}">Revisão Geral e Sangria</td>
+                                <td><strong th:text="${'R$ ' + #numbers.formatDecimal(os.valor, 1, 'POINT', 2, 'COMMA')}">R$ 280,00</strong></td>
+                                <td th:text="${#temporals.format(os.dataEntrega, 'dd/MM/yyyy')}">26/08/2026</td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${os.status.classeCss}" 
+                                          th:text="${os.status.descricao}">
+                                        Em Manutenção
+                                    </span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/servicos}" class="btn-action" title="Ver Detalhes">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script th:src="@{/js/script.js}" src="../static/js/script.js"></script>
+</body>
+</html>

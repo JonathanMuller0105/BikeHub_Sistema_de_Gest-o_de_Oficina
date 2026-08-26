@@ -1,0 +1,6 @@
+{
+  "name": "BikeHub - Sistema de Gestão de Oficina, Vendas e Aluguel",
+  "description": "Sistema completo de gestão de oficina mecânica, ordens de serviço, catálogo de vendas de seminovas e aluguel de bicicletas desenvolvido com arquitetura Spring Boot 3, Thymeleaf e MySQL.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

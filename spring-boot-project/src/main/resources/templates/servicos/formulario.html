@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--
+  ======================================================================
+  TEMPLATE THYMELEAF: ABERTURA DE ORDEM DE SERVIÇO (templates/servicos/formulario.html)
+  ======================================================================
+  - Seleção dinâmica do cliente e carregamento de suas bicicletas cadastradas via AJAX/JS.
+  - Seleção visual destacada para os status de serviço.
+  - Máscara monetária em R$ no campo de valor.
+-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BikeHub - Abertura de Ordem de Serviço</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="../../static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-circle-sm">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+                </div>
+                <h2>Bike<span>Hub</span></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item"><a th:href="@{/dashboard}" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Painel Geral</span></a></li>
+                    <li class="nav-item"><a th:href="@{/clientes}" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Clientes</span></a></li>
+                    <li class="nav-item"><a th:href="@{/servicos}" class="nav-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><span>Ordens de Serviço</span></a></li>
+                    <li class="nav-item"><a th:href="@{/vendas}" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg><span>Venda de Semi-Novas</span></a></li>
+                    <li class="nav-item"><a th:href="@{/aluguel}" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg><span>Aluguel / Locação</span></a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" th:text="${#strings.substring(usuarioLogado.nomeCompleto, 0, 2)}">AD</div>
+                    <div class="user-details"><p class="user-name" th:text="${usuarioLogado.nomeCompleto}">Administrador</p><p class="user-role" th:text="${usuarioLogado.perfil}">ADMIN</p></div>
+                </div>
+                <a th:href="@{/logout}" class="btn-logout" title="Encerrar Sessão"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h1 class="page-title">Abertura de Ordem de Serviço (OS)</h1>
+                    <p class="page-subtitle">Selecione o cliente, a bicicleta e registre os serviços de manutenção mecânica</p>
+                </div>
+                <div>
+                    <a th:href="@{/servicos}" class="btn btn-outline">&larr; Voltar para Ordens de Serviço</a>
+                </div>
+            </header>
+
+            <div th:if="${mensagemErro}" class="alert alert-danger" role="alert">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span th:text="${mensagemErro}">Erro ao abrir ordem de serviço.</span>
+            </div>
+
+            <!-- Formulário de Nova OS -->
+            <form th:action="@{/servicos/salvar}" method="POST" class="unified-form" id="formNovaOS">
+                
+                <section class="form-section-card">
+                    <div class="section-badge-header">
+                        <span class="step-num">1</span>
+                        <div>
+                            <h3>Vínculo de Cliente e Bicicleta</h3>
+                            <p>Selecione o proprietário para carregar suas bicicletas disponíveis</p>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <!-- Select de Cliente -->
+                        <div class="form-group">
+                            <label for="selectCliente" class="form-label">Cliente Solicitante <span class="required-star">*</span></label>
+                            <select id="selectCliente" name="clienteId" class="form-control" required onchange="carregarBicicletasDoCliente(this.value)">
+                                <option value="">-- Selecione o Cliente --</option>
+                                <option th:each="c : ${clientes}" 
+                                        th:value="${c.id}" 
+                                        th:text="${c.nome + ' (' + c.telefone + ')'}">
+                                    Carlos Silveira ((11) 98765-4321)
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Select Dinâmico de Bicicleta -->
+                        <div class="form-group">
+                            <label for="selectBicicleta" class="form-label">Bicicleta do Cliente <span class="required-star">*</span></label>
+                            <select id="selectBicicleta" name="bicicletaId" class="form-control" required>
+                                <option value="">-- Primeiro selecione um cliente acima --</option>
+                            </select>
+                            <span class="form-hint">Não encontrou a bicicleta? <a th:href="@{/clientes/novo}">Cadastre o cliente com a bike aqui</a></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section-card">
+                    <div class="section-badge-header">
+                        <span class="step-num">2</span>
+                        <div>
+                            <h3>Diagnóstico e Valores da Manutenção</h3>
+                            <p>Especifique os reparos, peças a trocar e prazo de entrega prometido</p>
+                        </div>
+                    </div>
+
+                    <!-- Descrição do Serviço -->
+                    <div class="form-group">
+                        <label for="descricao" class="form-label">Descrição Detalhada dos Serviços e Peças <span class="required-star">*</span></label>
+                        <textarea id="descricao" 
+                                  name="descricao" 
+                                  rows="4" 
+                                  class="form-control" 
+                                  placeholder="Ex: Revisão geral: sangria de freios hidráulicos, troca de cabos e conduítes, alinhamento de gancheira e regulagem de câmbio traseiro..."
+                                  required></textarea>
+                    </div>
+
+                    <div class="form-row-3">
+                        <!-- Valor Total do Serviço -->
+                        <div class="form-group">
+                            <label for="valor" class="form-label">Valor Total (R$) <span class="required-star">*</span></label>
+                            <input type="number" 
+                                   step="0.01" 
+                                   id="valor" 
+                                   name="valor" 
+                                   class="form-control" 
+                                   placeholder="Ex: 180.00" 
+                                   required>
+                        </div>
+
+                        <!-- Data Prevista de Entrega -->
+                        <div class="form-group">
+                            <label for="dataEntrega" class="form-label">Data Prevista de Entrega <span class="required-star">*</span></label>
+                            <input type="date" 
+                                   id="dataEntrega" 
+                                   name="dataEntrega" 
+                                   th:value="${#temporals.format(servico.dataEntrega, 'yyyy-MM-dd')}"
+                                   class="form-control" 
+                                   required>
+                        </div>
+
+                        <!-- Status Inicial -->
+                        <div class="form-group">
+                            <label for="status" class="form-label">Status Inicial da OS</label>
+                            <select id="status" name="status" class="form-control">
+                                <option th:each="st : ${todosStatus}" 
+                                        th:value="${st}" 
+                                        th:text="${st.descricao}"
+                                        th:selected="${st.name() == 'PENDENTE'}">
+                                    Pendente
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="form-actions-bar">
+                    <a th:href="@{/servicos}" class="btn btn-outline">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg" id="btnSalvarOS">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        <span>Abrir Ordem de Serviço</span>
+                    </button>
+                </div>
+
+            </form>
+        </main>
+    </div>
+
+    <script th:src="@{/js/script.js}" src="../../static/js/script.js"></script>
+    <script>
+        /**
+         * Função JavaScript assíncrona para buscar as bicicletas do cliente selecionado via AJAX
+         */
+        function carregarBicicletasDoCliente(clienteId) {
+            const selectBike = document.getElementById('selectBicicleta');
+            if (!clienteId) {
+                selectBike.innerHTML = '<option value="">-- Primeiro selecione um cliente acima --</option>';
+                return;
+            }
+
+            selectBike.innerHTML = '<option value="">Carregando bicicletas...</option>';
+
+            fetch('/servicos/api/bicicletas-por-cliente/' + clienteId)
+                .then(response => response.json())
+                .then(bicicletas => {
+                    selectBike.innerHTML = '';
+                    if (bicicletas.length === 0) {
+                        selectBike.innerHTML = '<option value="">Nenhuma bicicleta cadastrada para este cliente</option>';
+                        return;
+                    }
+                    selectBike.innerHTML = '<option value="">-- Selecione a Bicicleta --</option>';
+                    bicicletas.forEach(b => {
+                        const option = document.createElement('option');
+                        option.value = b.id;
+                        option.textContent = `${b.marca} ${b.modelo} - ${b.cor} (${b.ano})`;
+                        selectBike.appendChild(option);
+                    });
+                })
+                .catch(err => {
+                    console.error('Erro ao carregar bicicletas:', err);
+                    selectBike.innerHTML = '<option value="">Erro ao carregar bicicletas</option>';
+                });
+        }
+    </script>
+</body>
+</html>

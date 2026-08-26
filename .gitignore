@@ -1,0 +1,11 @@
+node_modules/
+build/
+dist/
+coverage/
+target/
+classes/
+test-classes/
+.DS_Store
+*.log
+.env*
+!.env.example

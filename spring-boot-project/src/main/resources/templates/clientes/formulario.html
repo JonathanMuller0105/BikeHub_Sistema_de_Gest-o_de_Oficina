@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<!--
+  ======================================================================
+  TEMPLATE THYMELEAF: CADASTRO INTEGRADO DE CLIENTE E BICICLETA (templates/clientes/formulario.html)
+  ======================================================================
+  - Formulário unificado em 2 seções:
+    1. Seção 1: Dados Pessoais do Cliente (Nome, Telefone com máscara, E-mail, CPF).
+    2. Seção 2: Dados Técnicos da Bicicleta (Marca, Modelo, Cor, Ano, Chassi).
+  - th:object="${cliente}": Faz o binding automático com a entidade Cliente.
+  - th:field="*{campo}": Faz o bind bidirecional com os atributos.
+  - th:if="${#fields.hasErrors('campo')}": Exibe mensagens de validação (@NotBlank, @Email).
+-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BikeHub - Cadastro Integrado de Cliente e Bicicleta</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="../../static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+
+    <div class="app-layout">
+        <!-- Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-circle-sm">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="18.5" cy="17.5" r="3.5"/>
+                        <circle cx="5.5" cy="17.5" r="3.5"/>
+                        <circle cx="15" cy="5" r="1"/>
+                        <path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
+                    </svg>
+                </div>
+                <h2>Bike<span>Hub</span></h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a th:href="@{/dashboard}" class="nav-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                            <span>Painel Geral</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/clientes}" class="nav-link active">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>Clientes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/servicos}" class="nav-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                            <span>Ordens de Serviço</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/vendas}" class="nav-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                            <span>Venda de Semi-Novas</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/aluguel}" class="nav-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
+                            <span>Aluguel / Locação</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" th:text="${#strings.substring(usuarioLogado.nomeCompleto, 0, 2)}">AD</div>
+                    <div class="user-details">
+                        <p class="user-name" th:text="${usuarioLogado.nomeCompleto}">Administrador</p>
+                        <p class="user-role" th:text="${usuarioLogado.perfil}">ADMIN</p>
+                    </div>
+                </div>
+                <a th:href="@{/logout}" class="btn-logout" title="Encerrar Sessão"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h1 class="page-title">Cadastro Unificado de Cliente</h1>
+                    <p class="page-subtitle">Preencha os dados do cliente e os detalhes técnicos da bicicleta na mesma tela</p>
+                </div>
+                <div>
+                    <a th:href="@{/clientes}" class="btn btn-outline">
+                        &larr; Voltar para a Lista
+                    </a>
+                </div>
+            </header>
+
+            <!-- Mensagem de erro caso a validação falhe -->
+            <div th:if="${mensagemErro}" class="alert alert-danger" role="alert">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span th:text="${mensagemErro}">Erro ao processar formulário.</span>
+            </div>
+
+            <!-- ======================================================= -->
+            <!-- FORMULÁRIO INTEGRADO THYMELEAF COM th:object            -->
+            <!-- ======================================================= -->
+            <form th:action="@{/clientes/salvar}" th:object="${cliente}" method="POST" class="unified-form" id="formClienteIntegrado">
+                
+                <input type="hidden" th:field="*{id}" />
+
+                <!-- SEÇÃO 1: DADOS PESSOAIS DO CLIENTE -->
+                <section class="form-section-card">
+                    <div class="section-badge-header">
+                        <span class="step-num">1</span>
+                        <div>
+                            <h3>Dados Pessoais do Cliente</h3>
+                            <p>Informações de contato e identificação para ordens de serviço</p>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <!-- Campo Nome -->
+                        <div class="form-group">
+                            <label for="nome" class="form-label">Nome Completo <span class="required-star">*</span></label>
+                            <input type="text" 
+                                   id="nome" 
+                                   th:field="*{nome}" 
+                                   class="form-control" 
+                                   th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid' : ''"
+                                   placeholder="Ex: Carlos Eduardo Silveira" 
+                                   required>
+                            <!-- Exibição de erro Bean Validation com th:errors -->
+                            <div th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}" class="invalid-feedback">
+                                Erro no campo nome.
+                            </div>
+                        </div>
+
+                        <!-- Campo Telefone com Máscara JS -->
+                        <div class="form-group">
+                            <label for="telefone" class="form-label">Telefone Celular / WhatsApp <span class="required-star">*</span></label>
+                            <input type="text" 
+                                   id="telefone" 
+                                   th:field="*{telefone}" 
+                                   class="form-control mascara-telefone" 
+                                   th:classappend="${#fields.hasErrors('telefone')} ? 'is-invalid' : ''"
+                                   placeholder="(11) 98765-4321" 
+                                   maxlength="15"
+                                   required>
+                            <div th:if="${#fields.hasErrors('telefone')}" th:errors="*{telefone}" class="invalid-feedback">
+                                Erro no campo telefone.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <!-- Campo E-mail -->
+                        <div class="form-group">
+                            <label for="email" class="form-label">Endereço de E-mail <span class="required-star">*</span></label>
+                            <input type="email" 
+                                   id="email" 
+                                   th:field="*{email}" 
+                                   class="form-control" 
+                                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                                   placeholder="cliente@email.com" 
+                                   required>
+                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="invalid-feedback">
+                                E-mail inválido.
+                            </div>
+                        </div>
+
+                        <!-- Campo CPF (Opcional) -->
+                        <div class="form-group">
+                            <label for="cpf" class="form-label">CPF (Opcional)</label>
+                            <input type="text" 
+                                   id="cpf" 
+                                   th:field="*{cpf}" 
+                                   class="form-control mascara-cpf" 
+                                   placeholder="000.000.000-00" 
+                                   maxlength="14">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEÇÃO 2: DADOS TÉCNICOS DA BICICLETA -->
+                <section class="form-section-card">
+                    <div class="section-badge-header">
+                        <span class="step-num">2</span>
+                        <div>
+                            <h3>Dados Técnicos da Bicicleta</h3>
+                            <p>Cadastre a bicicleta do cliente para abrir ordens de serviço imediatamente</p>
+                        </div>
+                    </div>
+
+                    <div class="form-row-3">
+                        <!-- Campo Marca da Bicicleta -->
+                        <div class="form-group">
+                            <label for="marcaBicicleta" class="form-label">Marca do Fabricante</label>
+                            <input type="text" 
+                                   id="marcaBicicleta" 
+                                   name="marcaBicicleta" 
+                                   class="form-control" 
+                                   placeholder="Ex: Caloi, Trek, Specialized, Sense">
+                        </div>
+
+                        <!-- Campo Modelo -->
+                        <div class="form-group">
+                            <label for="modeloBicicleta" class="form-label">Modelo</label>
+                            <input type="text" 
+                                   id="modeloBicicleta" 
+                                   name="modeloBicicleta" 
+                                   class="form-control" 
+                                   placeholder="Ex: Explorer Pro 29, Marlin 7">
+                        </div>
+
+                        <!-- Campo Cor -->
+                        <div class="form-group">
+                            <label for="corBicicleta" class="form-label">Cor Predominante</label>
+                            <input type="text" 
+                                   id="corBicicleta" 
+                                   name="corBicicleta" 
+                                   class="form-control" 
+                                   placeholder="Ex: Azul Metálico, Preto Fosco">
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <!-- Campo Ano -->
+                        <div class="form-group">
+                            <label for="anoBicicleta" class="form-label">Ano de Fabricação</label>
+                            <input type="number" 
+                                   id="anoBicicleta" 
+                                   name="anoBicicleta" 
+                                   class="form-control" 
+                                   placeholder="Ex: 2023" 
+                                   min="1980" 
+                                   max="2030" 
+                                   value="2023">
+                        </div>
+
+                        <!-- Campo Número de Série / Chassi -->
+                        <div class="form-group">
+                            <label for="numeroSerie" class="form-label">Número de Série / Chassi (Quadro)</label>
+                            <input type="text" 
+                                   id="numeroSerie" 
+                                   name="numeroSerie" 
+                                   class="form-control" 
+                                   placeholder="Ex: SN-2023-88990">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Barra de Ações do Formulário -->
+                <div class="form-actions-bar">
+                    <a th:href="@{/clientes}" class="btn btn-outline">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg" id="btnSalvarCliente">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        <span>Salvar Cadastro Integrado</span>
+                    </button>
+                </div>
+
+            </form>
+        </main>
+    </div>
+
+    <!-- Script com aplicação de máscaras e validações dinâmicas -->
+    <script th:src="@{/js/script.js}" src="../../static/js/script.js"></script>
+</body>
+</html>
