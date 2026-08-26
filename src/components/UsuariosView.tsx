@@ -131,6 +131,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
     onSalvarUsuario({
       nomeCompleto: nomeCompleto.trim(),
       login: login.trim(),
+      senha,
       email: email.trim() || `${login.trim().toLowerCase()}@bikehub.com.br`,
       telefone: telefone.trim() || '(11) 98000-0000',
       cargo: cargo.trim(),

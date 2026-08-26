@@ -14,6 +14,10 @@ USE `bikehub`;
 -- Desabilita temporariamente a verificação de chaves estrangeiras para permitir recriação limpa
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- Remove primeiro as tabelas transacionais que dependem do catálogo
+DROP TABLE IF EXISTS `aluguel`;
+DROP TABLE IF EXISTS `venda`;
+
 -- ------------------------------------------------------------
 -- 1. TABELA DE USUÁRIOS DO SISTEMA (Autenticação Administrativa)
 -- ------------------------------------------------------------
@@ -23,6 +27,9 @@ CREATE TABLE `usuario` (
   `username` VARCHAR(50) NOT NULL UNIQUE COMMENT 'Nome de usuário único para login (ex: Admin1234)',
   `senha` VARCHAR(100) NOT NULL COMMENT 'Senha de acesso do usuário (em produção deve ser hasheada com BCrypt)',
   `nome_completo` VARCHAR(100) NOT NULL COMMENT 'Nome completo do operador ou administrador',
+  `email` VARCHAR(100) DEFAULT NULL COMMENT 'E-mail profissional do funcionário',
+  `telefone` VARCHAR(20) DEFAULT NULL COMMENT 'Telefone profissional do funcionário',
+  `cargo` VARCHAR(80) DEFAULT NULL COMMENT 'Cargo ou especialidade do funcionário',
   `perfil` VARCHAR(20) NOT NULL DEFAULT 'ADMIN' COMMENT 'Papel do usuário no sistema (ADMIN, ATENDENTE, MECANICO)',
   `ativo` BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Indica se o usuário está ativo para autenticação',
   `criado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Data e hora de criação do registro'
@@ -122,6 +129,74 @@ CREATE TABLE `bicicleta_catalogo` (
 -- Índices para filtragem rápida por faixa etária, tipo de operação e disponibilidade
 CREATE INDEX `idx_catalogo_faixa_tipo` ON `bicicleta_catalogo` (`faixa_etaria`, `tipo_operacao`, `disponivel`);
 CREATE INDEX `idx_catalogo_tipo_operacao` ON `bicicleta_catalogo` (`tipo_operacao`);
+
+-- ------------------------------------------------------------
+-- 6. TABELA DE HISTÓRICO DE VENDAS
+-- ------------------------------------------------------------
+CREATE TABLE `venda` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `bicicleta_id` BIGINT NOT NULL,
+  `cliente_nome` VARCHAR(120) NOT NULL,
+  `cliente_cpf` VARCHAR(14) NOT NULL,
+  `cliente_telefone` VARCHAR(20) NOT NULL,
+  `cliente_email` VARCHAR(100) DEFAULT NULL,
+  `valor_original` DECIMAL(10, 2) NOT NULL,
+  `desconto` DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+  `valor_final` DECIMAL(10, 2) NOT NULL,
+  `forma_pagamento` VARCHAR(30) NOT NULL,
+  `parcelas` INT DEFAULT 1,
+  `data_venda` DATE NOT NULL,
+  `garantia_meses` INT NOT NULL DEFAULT 6,
+  CONSTRAINT `fk_venda_bicicleta_catalogo` FOREIGN KEY (`bicicleta_id`)
+    REFERENCES `bicicleta_catalogo` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Histórico persistente das vendas de bicicletas semi-novas';
+
+CREATE INDEX `idx_venda_bicicleta_id` ON `venda` (`bicicleta_id`);
+CREATE INDEX `idx_venda_data` ON `venda` (`data_venda`);
+CREATE INDEX `idx_venda_cliente_cpf` ON `venda` (`cliente_cpf`);
+
+-- ------------------------------------------------------------
+-- 7. TABELA DE CONTRATOS DE ALUGUEL
+-- ------------------------------------------------------------
+CREATE TABLE `aluguel` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `codigo_contrato` VARCHAR(40) NOT NULL UNIQUE,
+  `bicicleta_id` BIGINT NOT NULL,
+  `cliente_nome` VARCHAR(120) NOT NULL,
+  `cliente_cpf` VARCHAR(14) NOT NULL,
+  `cliente_telefone` VARCHAR(20) NOT NULL,
+  `cliente_email` VARCHAR(100) DEFAULT NULL,
+  `cliente_endereco` VARCHAR(255) DEFAULT NULL,
+  `data_retirada` DATE NOT NULL,
+  `hora_retirada` TIME NOT NULL,
+  `data_devolucao_prevista` DATE NOT NULL,
+  `hora_devolucao_prevista` TIME NOT NULL,
+  `data_devolucao_efetiva` DATE DEFAULT NULL,
+  `hora_devolucao_efetiva` TIME DEFAULT NULL,
+  `quantidade_diarias` INT NOT NULL,
+  `valor_diaria` DECIMAL(10, 2) NOT NULL,
+  `valor_total` DECIMAL(10, 2) NOT NULL,
+  `valor_caucao` DECIMAL(10, 2) NOT NULL,
+  `valor_caucao_devolvido` DECIMAL(10, 2) DEFAULT NULL,
+  `taxa_avaria_ou_atraso` DECIMAL(10, 2) DEFAULT NULL,
+  `motivo_taxa` VARCHAR(255) DEFAULT NULL,
+  `metodo_devolucao_caucao` VARCHAR(50) DEFAULT NULL,
+  `observacao_devolucao` TEXT DEFAULT NULL,
+  `forma_pagamento` VARCHAR(30) NOT NULL,
+  `acessorios` TEXT DEFAULT NULL,
+  `status` ENUM('EM_ANDAMENTO', 'DEVOLVIDO', 'ATRASADO') NOT NULL DEFAULT 'EM_ANDAMENTO',
+  `data_criacao` DATE NOT NULL,
+  CONSTRAINT `fk_aluguel_bicicleta_catalogo` FOREIGN KEY (`bicicleta_id`)
+    REFERENCES `bicicleta_catalogo` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Contratos e histórico de locação de bicicletas';
+
+CREATE INDEX `idx_aluguel_bicicleta_id` ON `aluguel` (`bicicleta_id`);
+CREATE INDEX `idx_aluguel_status` ON `aluguel` (`status`);
+CREATE INDEX `idx_aluguel_data_devolucao` ON `aluguel` (`data_devolucao_prevista`);
 
 -- Reabilita a checagem de chaves estrangeiras
 SET FOREIGN_KEY_CHECKS = 1;

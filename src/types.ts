@@ -12,6 +12,7 @@ export type PerfilUsuario = 'ADMIN' | 'MECANICO' | 'ATENDENTE';
 export interface Usuario {
   id: number;
   login: string;
+  senha?: string;
   nomeCompleto: string;
   email?: string;
   telefone?: string;

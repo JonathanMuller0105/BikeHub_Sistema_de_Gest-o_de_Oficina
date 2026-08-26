@@ -56,6 +56,16 @@ public class Usuario implements Serializable {
     @Column(name = "nome_completo", length = 100)
     private String nomeCompleto;
 
+    /** Dados profissionais opcionais exibidos na gestão de funcionários do React. */
+    @Column(name = "email", length = 100)
+    private String email;
+
+    @Column(name = "telefone", length = 20)
+    private String telefone;
+
+    @Column(name = "cargo", length = 80)
+    private String cargo;
+
     /**
      * Perfil de permissão (ex: ADMIN, ATENDENTE, MECANICO).
      */
@@ -130,6 +140,30 @@ public class Usuario implements Serializable {
 
     public void setNomeCompleto(String nomeCompleto) {
         this.nomeCompleto = nomeCompleto;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public String getCargo() {
+        return cargo;
+    }
+
+    public void setCargo(String cargo) {
+        this.cargo = cargo;
     }
 
     public String getPerfil() {

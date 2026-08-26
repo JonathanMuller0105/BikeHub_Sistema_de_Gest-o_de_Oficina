@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bikehub" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F39C3D"/>
+      <stop offset="1" stop-color="#D35400"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#bikehub)"/>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+    <circle cx="17" cy="43" r="9"/>
+    <circle cx="47" cy="43" r="9"/>
+    <path d="M17 43l9-17h9l12 17M26 26l11 17H17l15-11M24 21h7M37 23h6"/>
+  </g>
+</svg>

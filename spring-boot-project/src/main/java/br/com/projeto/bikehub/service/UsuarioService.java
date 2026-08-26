@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -117,5 +118,38 @@ public class UsuarioService {
             return null;
         }
         return (Usuario) session.getAttribute(SESSION_USUARIO_LOGADO);
+    }
+
+    /** Lista todos os funcionários cadastrados sem alterar o fluxo de autenticação. */
+    @Transactional(readOnly = true)
+    public List<Usuario> listarTodos() {
+        return usuarioRepository.findAll();
+    }
+
+    /** Busca um usuário para edição, exclusão ou alteração de status. */
+    @Transactional(readOnly = true)
+    public Optional<Usuario> buscarPorId(Long id) {
+        return usuarioRepository.findById(id);
+    }
+
+    /** Cria ou atualiza um funcionário. */
+    @Transactional
+    public Usuario salvar(Usuario usuario) {
+        return usuarioRepository.save(usuario);
+    }
+
+    /** Exclui um funcionário pelo identificador. */
+    @Transactional
+    public void excluir(Long id) {
+        usuarioRepository.deleteById(id);
+    }
+
+    /** Alterna a conta entre ativa e inativa e devolve o registro atualizado. */
+    @Transactional
+    public Usuario alternarStatusAtivo(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + id));
+        usuario.setAtivo(!Boolean.TRUE.equals(usuario.getAtivo()));
+        return usuarioRepository.save(usuario);
     }
 }

@@ -15,7 +15,7 @@
  * 9. Visualizador Integrado de Código-Fonte Spring Boot 3 (Java 21, DDL/DML, Thymeleaf)
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Usuario, 
   Cliente, 
@@ -28,14 +28,8 @@ import {
   VendaRegistro,
   AluguelRegistro
 } from './types';
-import { 
-  CLIENTES_INICIAIS, 
-  SERVICOS_INICIAIS, 
-  CATALOGO_INICIAL,
-  USUARIOS_INICIAIS,
+import {
   SERVICOS_CATALOGO_INICIAL,
-  VENDAS_INICIAIS,
-  ALUGUEIS_INICIAIS
 } from './data/initialData';
 
 import { Sidebar } from './components/Sidebar';
@@ -52,6 +46,26 @@ import { AluguelView } from './components/AluguelView';
 import { UsuariosView } from './components/UsuariosView';
 import { SpringCodeViewer } from './components/SpringCodeViewer';
 import { useTheme } from './hooks/useTheme';
+import {
+  alternarStatusUsuario,
+  atualizarStatusServico,
+  criarCliente,
+  criarItemCatalogo,
+  criarServico,
+  excluirCliente,
+  excluirServico,
+  excluirUsuario,
+  listarAlugueis,
+  listarCatalogo,
+  listarClientes,
+  listarServicos,
+  listarUsuarios,
+  listarVendas,
+  registrarAluguel,
+  registrarDevolucaoAluguel,
+  registrarVenda,
+  salvarUsuario,
+} from './services/api';
 
 export default function App() {
   // Gestão de Tema (Sistema, Claro, Escuro)
@@ -86,13 +100,13 @@ export default function App() {
   const [abaAtiva, setAbaAtiva] = useState<AbaNavegacao>('dashboard');
 
   // Estados dos Modelos de Dados
-  const [clientes, setClientes] = useState<Cliente[]>(CLIENTES_INICIAIS);
-  const [servicos, setServicos] = useState<Servico[]>(SERVICOS_INICIAIS);
-  const [catalogo, setCatalogo] = useState<BicicletaCatalogo[]>(CATALOGO_INICIAL);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [servicos, setServicos] = useState<Servico[]>([]);
+  const [catalogo, setCatalogo] = useState<BicicletaCatalogo[]>([]);
   const [servicosCatalogo, setServicosCatalogo] = useState<ServicoCatalogo[]>(SERVICOS_CATALOGO_INICIAL);
-  const [vendas, setVendas] = useState<VendaRegistro[]>(VENDAS_INICIAIS);
-  const [alugueis, setAlugueis] = useState<AluguelRegistro[]>(ALUGUEIS_INICIAIS);
-  const [usuarios, setUsuarios] = useState<Usuario[]>(USUARIOS_INICIAIS);
+  const [vendas, setVendas] = useState<VendaRegistro[]>([]);
+  const [alugueis, setAlugueis] = useState<AluguelRegistro[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   
   // Cliente pré-selecionado para abertura direta de OS
   const [clientePreSelecionadoOS, setClientePreSelecionadoOS] = useState<number | null>(null);
@@ -104,6 +118,37 @@ export default function App() {
     setNotificacao(msg);
     setTimeout(() => setNotificacao(null), 4000);
   };
+
+  // Carrega os clientes persistidos no MySQL quando a aplicação é montada.
+  useEffect(() => {
+    let ativo = true;
+
+    listarClientes()
+      .then((clientesCarregados) => {
+        if (ativo) setClientes(clientesCarregados);
+      })
+      .catch((erro: Error) => {
+        if (ativo) dispararNotificacao(`Erro ao carregar clientes: ${erro.message}`);
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  // Carrega os demais módulos persistidos sem bloquear um módulo quando outro falhar.
+  useEffect(() => {
+    const carregar = <T,>(consulta: () => Promise<T>, atualizar: (dados: T) => void, nome: string) => {
+      consulta().then(atualizar).catch((erro: Error) =>
+        dispararNotificacao(`Erro ao carregar ${nome}: ${erro.message}`)
+      );
+    };
+    carregar(listarServicos, setServicos, 'serviços');
+    carregar(listarCatalogo, setCatalogo, 'catálogo');
+    carregar(listarUsuarios, setUsuarios, 'usuários');
+    carregar(listarVendas, setVendas, 'vendas');
+    carregar(listarAlugueis, setAlugueis, 'aluguéis');
+  }, []);
 
   // Handler de Login
   const handleLoginSucesso = (usuario: Usuario) => {
@@ -117,36 +162,32 @@ export default function App() {
     setUsuarioLogado(null);
   };
 
-  // Handler para Salvar Cliente Integrado (com Bicicleta)
+  // Salva cliente e bicicleta pela API e usa os IDs reais gerados pelo MySQL.
   const handleSalvarClienteIntegrado = (
     novoCliente: Omit<Cliente, 'id' | 'dataCadastro'>,
     novaBicicleta: Omit<Bicicleta, 'id' | 'clienteId'>
   ) => {
-    const proximoClienteId = Math.max(...clientes.map((c) => c.id), 0) + 1;
-    const proximaBikeId = Math.floor(Math.random() * 10000) + 10;
-
-    const bikeCriada: Bicicleta = {
-      ...novaBicicleta,
-      id: proximaBikeId,
-      clienteId: proximoClienteId,
-    };
-
-    const clienteCompleto: Cliente = {
-      ...novoCliente,
-      id: proximoClienteId,
-      dataCadastro: new Date().toISOString().split('T')[0],
-      bicicletas: [bikeCriada],
-    };
-
-    setClientes([clienteCompleto, ...clientes]);
-    setAbaAtiva('clientes');
-    dispararNotificacao(`Cliente "${clienteCompleto.nome}" e bicicleta cadastrados com sucesso!`);
+    criarCliente({ cliente: novoCliente, bicicleta: novaBicicleta })
+      .then((clienteCriado) => {
+        setClientes((clientesAtuais) => [clienteCriado, ...clientesAtuais]);
+        setAbaAtiva('clientes');
+        dispararNotificacao(`Cliente "${clienteCriado.nome}" e bicicleta cadastrados com sucesso!`);
+      })
+      .catch((erro: Error) => {
+        dispararNotificacao(`Erro ao cadastrar cliente: ${erro.message}`);
+      });
   };
 
-  // Handler para Excluir Cliente
+  // Exclui primeiro no backend e só então atualiza a lista exibida pelo React.
   const handleExcluirCliente = (id: number) => {
-    setClientes(clientes.filter((c) => c.id !== id));
-    dispararNotificacao('Cliente e bicicletas vinculadas removidos com sucesso.');
+    excluirCliente(id)
+      .then(() => {
+        setClientes((clientesAtuais) => clientesAtuais.filter((c) => c.id !== id));
+        dispararNotificacao('Cliente e bicicletas vinculadas removidos com sucesso.');
+      })
+      .catch((erro: Error) => {
+        dispararNotificacao(`Erro ao excluir cliente: ${erro.message}`);
+      });
   };
 
   // Handler para Abrir OS Direta para Cliente
@@ -159,39 +200,34 @@ export default function App() {
   const handleSalvarOS = (
     novaOS: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>
   ) => {
-    const cliente = clientes.find((c) => c.id === novaOS.clienteId);
-    const bike = cliente?.bicicletas.find((b) => b.id === novaOS.bicicletaId);
-
-    const proximaOSId = Math.max(...servicos.map((s) => s.id), 0) + 1;
-
-    const osCompleta: Servico = {
-      ...novaOS,
-      id: proximaOSId,
-      clienteNome: cliente ? cliente.nome : 'Cliente Desconhecido',
-      clienteTelefone: cliente ? cliente.telefone : '',
-      bicicletaDescricao: bike
-        ? `${bike.marca} ${bike.modelo} - ${bike.cor} (${bike.ano})`
-        : 'Bicicleta não especificada',
-    };
-
-    setServicos([osCompleta, ...servicos]);
-    setClientePreSelecionadoOS(null);
-    setAbaAtiva('servicos');
-    dispararNotificacao(`Ordem de Serviço #${proximaOSId} aberta com sucesso!`);
+    criarServico(novaOS)
+      .then((osCriada) => {
+        setServicos((atuais) => [osCriada, ...atuais]);
+        setClientePreSelecionadoOS(null);
+        setAbaAtiva('servicos');
+        dispararNotificacao(`Ordem de Serviço #${osCriada.id} aberta com sucesso!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao abrir OS: ${erro.message}`));
   };
 
   // Handler para Atualizar Status de OS
   const handleAtualizarStatusOS = (osId: number, novoStatus: StatusServico) => {
-    setServicos(
-      servicos.map((s) => (s.id === osId ? { ...s, status: novoStatus } : s))
-    );
-    dispararNotificacao(`Status da OS #${osId} alterado com sucesso.`);
+    atualizarStatusServico(osId, novoStatus)
+      .then((osAtualizada) => {
+        setServicos((atuais) => atuais.map((s) => (s.id === osId ? osAtualizada : s)));
+        dispararNotificacao(`Status da OS #${osId} alterado com sucesso.`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao alterar status: ${erro.message}`));
   };
 
   // Handler para Excluir OS
   const handleExcluirOS = (osId: number) => {
-    setServicos(servicos.filter((s) => s.id !== osId));
-    dispararNotificacao(`Ordem de Serviço #${osId} excluída.`);
+    excluirServico(osId)
+      .then(() => {
+        setServicos((atuais) => atuais.filter((s) => s.id !== osId));
+        dispararNotificacao(`Ordem de Serviço #${osId} excluída.`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao excluir OS: ${erro.message}`));
   };
 
   // Handler para Salvar Serviço no Catálogo de Oficina
@@ -229,43 +265,49 @@ export default function App() {
 
   // Handler para Registrar Nova Venda de Bicicleta
   const handleRegistrarNovaVenda = (dados: Omit<VendaRegistro, 'id'>) => {
-    const proximoId = Math.max(...vendas.map((v) => v.id), 0) + 1;
-    const novaVenda: VendaRegistro = {
-      ...dados,
-      id: proximoId,
-    };
-    setVendas([novaVenda, ...vendas]);
-    // Marca a bike como vendida no catálogo
-    setCatalogo(
-      catalogo.map((b) => (b.id === dados.bicicletaId ? { ...b, disponivel: false } : b))
-    );
-    dispararNotificacao(`Venda da ${dados.bicicletaDescricao} liquidada via ${dados.formaPagamento}!`);
+    registrarVenda(dados)
+      .then((vendaCriada) => {
+        setVendas((atuais) => [vendaCriada, ...atuais]);
+        setCatalogo((atual) => atual.map((b) =>
+          b.id === dados.bicicletaId ? { ...b, disponivel: false } : b
+        ));
+        dispararNotificacao(`Venda da ${dados.bicicletaDescricao} liquidada via ${dados.formaPagamento}!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao registrar venda: ${erro.message}`));
   };
 
   // Handler para Registrar Novo Aluguel
   const handleRegistrarNovoAluguel = (dados: Omit<AluguelRegistro, 'id'>) => {
-    const proximoId = Math.max(...alugueis.map((a) => a.id), 0) + 1;
-    const novoAluguel: AluguelRegistro = {
-      ...dados,
-      id: proximoId,
-    };
-    setAlugueis([novoAluguel, ...alugueis]);
-    // Marca a bike como alugada
-    setCatalogo(
-      catalogo.map((b) => (b.id === dados.bicicletaId ? { ...b, disponivel: false } : b))
-    );
-    dispararNotificacao(`Contrato ${dados.codigoContrato} emitido para ${dados.clienteNome}!`);
+    registrarAluguel(dados)
+      .then((aluguelCriado) => {
+        setAlugueis((atuais) => [aluguelCriado, ...atuais]);
+        setCatalogo((atual) => atual.map((b) =>
+          b.id === dados.bicicletaId ? { ...b, disponivel: false } : b
+        ));
+        dispararNotificacao(`Contrato ${dados.codigoContrato} emitido para ${dados.clienteNome}!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao emitir contrato: ${erro.message}`));
   };
 
   // Handler para Devolução de Aluguel Simples
   const handleDevolverAluguel = (contratoId: number, bikeId: number) => {
-    setAlugueis(
-      alugueis.map((a) => (a.id === contratoId ? { ...a, status: 'DEVOLVIDO' as const } : a))
-    );
-    setCatalogo(
-      catalogo.map((b) => (b.id === bikeId ? { ...b, disponivel: true } : b))
-    );
-    dispararNotificacao('Devolução registrada com sucesso! A bicicleta retornou ao estoque disponível.');
+    const contrato = alugueis.find((a) => a.id === contratoId);
+    if (!contrato) return;
+    const agora = new Date();
+    registrarDevolucaoAluguel({
+      contratoId,
+      bikeId,
+      dataDevolucaoEfetiva: agora.toISOString().split('T')[0],
+      horaDevolucaoEfetiva: agora.toTimeString().slice(0, 5),
+      valorCaucaoDevolvido: contrato.valorCaucao,
+      taxaAvariaOuAtraso: 0,
+      metodoDevolucaoCaucao: 'DINHEIRO',
+      observacaoDevolucao: 'Devolução simples sem ocorrência.',
+    }).then((atualizado) => {
+      setAlugueis((atuais) => atuais.map((a) => a.id === contratoId ? atualizado : a));
+      setCatalogo((atual) => atual.map((b) => b.id === bikeId ? { ...b, disponivel: true } : b));
+      dispararNotificacao('Devolução registrada com sucesso! A bicicleta retornou ao estoque disponível.');
+    }).catch((erro: Error) => dispararNotificacao(`Erro na devolução: ${erro.message}`));
   };
 
   // Handler para Devolução Completa de Aluguel com Vistoria e Quitação de Caução
@@ -280,42 +322,29 @@ export default function App() {
     metodoDevolucaoCaucao: string;
     observacaoDevolucao: string;
   }) => {
-    setAlugueis(
-      alugueis.map((a) =>
-        a.id === dados.contratoId
-          ? {
-              ...a,
-              status: 'DEVOLVIDO' as const,
-              dataDevolucaoEfetiva: dados.dataDevolucaoEfetiva,
-              horaDevolucaoEfetiva: dados.horaDevolucaoEfetiva,
-              valorCaucaoDevolvido: dados.valorCaucaoDevolvido,
-              taxaAvariaOuAtraso: dados.taxaAvariaOuAtraso,
-              motivoTaxa: dados.motivoTaxa,
-              metodoDevolucaoCaucao: dados.metodoDevolucaoCaucao,
-              observacaoDevolucao: dados.observacaoDevolucao,
-            }
-          : a
-      )
-    );
-    setCatalogo(
-      catalogo.map((b) => (b.id === dados.bikeId ? { ...b, disponivel: true } : b))
-    );
-    dispararNotificacao(`Devolução concluída! Caução de R$ ${dados.valorCaucaoDevolvido.toFixed(2)} liquidado via ${dados.metodoDevolucaoCaucao}.`);
+    registrarDevolucaoAluguel(dados)
+      .then((atualizado) => {
+        setAlugueis((atuais) => atuais.map((a) => a.id === dados.contratoId ? atualizado : a));
+        setCatalogo((atual) => atual.map((b) =>
+          b.id === dados.bikeId ? { ...b, disponivel: true } : b
+        ));
+        dispararNotificacao(`Devolução concluída! Caução de R$ ${dados.valorCaucaoDevolvido.toFixed(2)} liquidado via ${dados.metodoDevolucaoCaucao}.`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro na devolução: ${erro.message}`));
   };
 
   // Handler para Cadastrar Nova Bicicleta (Aluguel ou Venda)
   const handleCadastrarNovaBicicleta = (novaBike: Omit<BicicletaCatalogo, 'id'>) => {
-    const proximoId = Math.max(...catalogo.map((b) => b.id), 0) + 1;
-    const bikeCompleta: BicicletaCatalogo = {
-      ...novaBike,
-      id: proximoId,
-    };
-    setCatalogo([bikeCompleta, ...catalogo]);
-    dispararNotificacao(
-      `Bicicleta "${novaBike.marca} ${novaBike.modelo}" incluída com sucesso na ${
-        novaBike.tipo === 'ALUGUEL' ? 'frota de aluguel' : 'área de vendas'
-      }!`
-    );
+    criarItemCatalogo(novaBike)
+      .then((bikeCriada) => {
+        setCatalogo((atual) => [bikeCriada, ...atual]);
+        dispararNotificacao(
+          `Bicicleta "${novaBike.marca} ${novaBike.modelo}" incluída com sucesso na ${
+            novaBike.tipo === 'ALUGUEL' ? 'frota de aluguel' : 'área de vendas'
+          }!`
+        );
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao cadastrar bicicleta: ${erro.message}`));
   };
 
   // Handler para Locação Simples / Devolução
@@ -332,30 +361,34 @@ export default function App() {
 
   // Handlers para Gestão de Usuários / Funcionários
   const handleSalvarUsuario = (usuario: Omit<Usuario, 'id'> | Usuario) => {
-    if ('id' in usuario && usuario.id) {
-      setUsuarios(usuarios.map((u) => (u.id === usuario.id ? (usuario as Usuario) : u)));
-      dispararNotificacao(`Dados do funcionário "${usuario.nomeCompleto}" atualizados.`);
-    } else {
-      const proximoId = Math.max(...usuarios.map((u) => u.id), 0) + 1;
-      const novoUsuario: Usuario = {
-        ...usuario,
-        id: proximoId,
-        dataCadastro: new Date().toISOString().split('T')[0],
-      };
-      setUsuarios([novoUsuario, ...usuarios]);
-      dispararNotificacao(`Funcionário "${novoUsuario.nomeCompleto}" cadastrado com sucesso!`);
-    }
+    salvarUsuario(usuario)
+      .then((usuarioSalvo) => {
+        setUsuarios((atuais) => {
+          const existe = atuais.some((u) => u.id === usuarioSalvo.id);
+          return existe
+            ? atuais.map((u) => u.id === usuarioSalvo.id ? usuarioSalvo : u)
+            : [usuarioSalvo, ...atuais];
+        });
+        dispararNotificacao(`Funcionário "${usuarioSalvo.nomeCompleto}" salvo com sucesso!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao salvar funcionário: ${erro.message}`));
   };
 
   const handleExcluirUsuario = (id: number) => {
-    setUsuarios(usuarios.filter((u) => u.id !== id));
-    dispararNotificacao('Usuário/Funcionário removido do sistema.');
+    excluirUsuario(id)
+      .then(() => {
+        setUsuarios((atuais) => atuais.filter((u) => u.id !== id));
+        dispararNotificacao('Usuário/Funcionário removido do sistema.');
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao excluir funcionário: ${erro.message}`));
   };
 
   const handleAlternarStatusUsuario = (id: number) => {
-    setUsuarios(
-      usuarios.map((u) => (u.id === id ? { ...u, ativo: !u.ativo } : u))
-    );
+    alternarStatusUsuario(id)
+      .then((usuarioAtualizado) => {
+        setUsuarios((atuais) => atuais.map((u) => u.id === id ? usuarioAtualizado : u));
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao alterar usuário: ${erro.message}`));
   };
 
   // Se não estiver autenticado, exibe a tela de login
@@ -504,4 +537,3 @@ export default function App() {
     </div>
   );
 }
-

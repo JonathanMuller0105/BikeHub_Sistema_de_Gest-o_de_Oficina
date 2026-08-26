@@ -110,6 +110,14 @@
 
     <!-- Plugin Maven do Spring Boot para empacotar o projeto em JAR executável -->
     <build>
+        <!-- O pom fica na raiz, enquanto o backend está dentro de spring-boot-project. -->
+        <sourceDirectory>spring-boot-project/src/main/java</sourceDirectory>
+        <resources>
+            <resource>
+                <!-- Inclui application.properties, templates e arquivos estáticos no JAR. -->
+                <directory>spring-boot-project/src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

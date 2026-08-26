@@ -32,6 +32,12 @@ public class CatalogoService {
         this.catalogoRepository = catalogoRepository;
     }
 
+    /** Retorna todos os itens do catálogo para consumo da API React. */
+    @Transactional(readOnly = true)
+    public List<BicicletaCatalogo> listarTodos() {
+        return catalogoRepository.findAll();
+    }
+
     /**
      * Retorna o catálogo de semi-novas para VENDA com filtros opcionais de faixa etária e busca.
      *
