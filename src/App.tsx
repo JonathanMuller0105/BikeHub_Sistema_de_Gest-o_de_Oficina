@@ -56,6 +56,7 @@ import {
   criarItemCatalogo,
   criarServico,
   excluirCliente,
+  excluirBicicletaCatalogo,
   excluirServico,
   excluirUsuario,
   listarAlugueis,
@@ -394,6 +395,15 @@ export default function App() {
       .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar bicicleta: ${erro.message}`));
   };
 
+  const handleExcluirBicicletaCatalogo = (id: number) => {
+    excluirBicicletaCatalogo(id)
+      .then(() => {
+        setCatalogo((atual) => atual.filter((item) => item.id !== id));
+        dispararNotificacao('Bicicleta removida do catálogo com sucesso!');
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao excluir bicicleta: ${erro.message}`));
+  };
+
   // Handler para Locação Simples / Devolução
   const handleAlternarLocacao = (bikeId: number, alugar: boolean) => {
     setCatalogo(
@@ -583,6 +593,7 @@ export default function App() {
             onRegistrarNovaVenda={handleRegistrarNovaVenda}
             onCadastrarNovaBicicleta={handleCadastrarNovaBicicleta}
             onAtualizarBicicleta={handleAtualizarBicicletaCatalogo}
+            onExcluirBicicleta={handleExcluirBicicletaCatalogo}
           />
         )}
 
@@ -597,6 +608,7 @@ export default function App() {
             onDevolverAluguelComVistoria={handleDevolverAluguelComVistoria}
             onCadastrarNovaBicicleta={handleCadastrarNovaBicicleta}
             onAtualizarBicicleta={handleAtualizarBicicletaCatalogo}
+            onExcluirBicicleta={handleExcluirBicicletaCatalogo}
           />
         )}
 

@@ -19,7 +19,8 @@ import {
   CreditCard, 
   QrCode,
   Plus,
-  Pencil
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { BicicletaCatalogo, Cliente, VendaRegistro } from '../types';
 import { VendaModal } from './VendaModal';
@@ -32,6 +33,7 @@ interface VendasViewProps {
   onRegistrarNovaVenda: (dados: Omit<VendaRegistro, 'id'>) => void;
   onCadastrarNovaBicicleta?: (novaBike: Omit<BicicletaCatalogo, 'id'>) => void;
   onAtualizarBicicleta?: (id: number, dados: Omit<BicicletaCatalogo, 'id'>) => void;
+  onExcluirBicicleta?: (id: number) => void;
 }
 
 export const VendasView: React.FC<VendasViewProps> = ({
@@ -41,6 +43,7 @@ export const VendasView: React.FC<VendasViewProps> = ({
   onRegistrarNovaVenda,
   onCadastrarNovaBicicleta,
   onAtualizarBicicleta,
+  onExcluirBicicleta,
 }) => {
   const [faixaFiltro, setFaixaFiltro] = useState<string>('TODAS');
   const [termo, setTermo] = useState('');
@@ -264,6 +267,15 @@ export const VendasView: React.FC<VendasViewProps> = ({
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
+                      {onExcluirBicicleta && (
+                        <button
+                          onClick={() => confirm(`Excluir ${bike.marca} ${bike.modelo} do catálogo?`) && onExcluirBicicleta(bike.id)}
+                          className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-xl transition-colors cursor-pointer"
+                          title="Excluir bicicleta"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                       {bike.disponivel ? (
                         <button
                           onClick={() => setBikeParaVenda(bike)}

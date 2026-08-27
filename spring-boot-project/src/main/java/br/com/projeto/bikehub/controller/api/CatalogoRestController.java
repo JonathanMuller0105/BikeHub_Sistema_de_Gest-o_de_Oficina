@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.dao.DataIntegrityViolationException;
 
 /** API REST do estoque de bicicletas para venda e aluguel. */
 @RestController
@@ -64,6 +66,18 @@ public class CatalogoRestController {
             return ResponseEntity.ok(CatalogoResponse.from(atualizado));
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(404).body(Map.of("mensagem", exception.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> excluir(@PathVariable Long id) {
+        try {
+            catalogoService.excluir(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(404).body(Map.of("mensagem", exception.getMessage()));
+        } catch (DataIntegrityViolationException exception) {
+            return ResponseEntity.status(409).body(Map.of("mensagem", exception.getMessage()));
         }
     }
 }

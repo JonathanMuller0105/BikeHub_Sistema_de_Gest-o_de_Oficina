@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AluguelRepository extends JpaRepository<Aluguel, Long> {
     List<Aluguel> findAllByOrderByDataCriacaoDescIdDesc();
+    boolean existsByBicicletaId(Long bicicletaId);
 }

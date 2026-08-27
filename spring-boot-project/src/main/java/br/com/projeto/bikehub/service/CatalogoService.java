@@ -4,6 +4,9 @@ import br.com.projeto.bikehub.entity.BicicletaCatalogo;
 import br.com.projeto.bikehub.entity.BicicletaCatalogo.FaixaEtaria;
 import br.com.projeto.bikehub.entity.BicicletaCatalogo.TipoOperacao;
 import br.com.projeto.bikehub.repository.BicicletaCatalogoRepository;
+import br.com.projeto.bikehub.repository.AluguelRepository;
+import br.com.projeto.bikehub.repository.VendaRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +29,16 @@ import java.util.Optional;
 public class CatalogoService {
 
     private final BicicletaCatalogoRepository catalogoRepository;
+    private final VendaRepository vendaRepository;
+    private final AluguelRepository aluguelRepository;
 
     @Autowired
-    public CatalogoService(BicicletaCatalogoRepository catalogoRepository) {
+    public CatalogoService(BicicletaCatalogoRepository catalogoRepository,
+                           VendaRepository vendaRepository,
+                           AluguelRepository aluguelRepository) {
         this.catalogoRepository = catalogoRepository;
+        this.vendaRepository = vendaRepository;
+        this.aluguelRepository = aluguelRepository;
     }
 
     /** Retorna todos os itens do catálogo para consumo da API React. */
@@ -103,6 +112,19 @@ public class CatalogoService {
         item.setImagemUrl(imagemUrl == null || imagemUrl.isBlank() ? null : imagemUrl.trim());
         item.setDescricao(descricao == null || descricao.isBlank() ? null : descricao.trim());
         return catalogoRepository.save(item);
+    }
+
+    /** Exclui um item somente quando ele não compõe o histórico comercial. */
+    @Transactional
+    public void excluir(Long id) {
+        if (!catalogoRepository.existsById(id)) {
+            throw new IllegalArgumentException("Item do catálogo não encontrado com ID: " + id);
+        }
+        if (vendaRepository.existsByBicicletaId(id) || aluguelRepository.existsByBicicletaId(id)) {
+            throw new DataIntegrityViolationException(
+                    "Não é possível excluir a bicicleta porque ela possui venda ou aluguel vinculado ao histórico.");
+        }
+        catalogoRepository.deleteById(id);
     }
 
     /**
