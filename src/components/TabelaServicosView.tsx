@@ -29,7 +29,7 @@ import { ServicoCatalogo, CategoriaServico, AbaNavegacao } from '../types';
 interface TabelaServicosViewProps {
   servicosCatalogo?: ServicoCatalogo[];
   servicos?: ServicoCatalogo[];
-  onSalvarServico: (novoServico: Omit<ServicoCatalogo, 'id'>) => void;
+  onSalvarServico: (servico: Omit<ServicoCatalogo, 'id'> | ServicoCatalogo) => void;
   onAlternarStatusServico?: (id: number) => void;
   onAlternarStatus?: (id: number) => void;
   onExcluirServico: (id: number) => void;
@@ -52,6 +52,7 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('TODAS');
   const [termoBusca, setTermoBusca] = useState('');
   const [modalNovoAberto, setModalNovoAberto] = useState(false);
+  const [servicoEmEdicao, setServicoEmEdicao] = useState<ServicoCatalogo | null>(null);
 
   // Form State para Novo Serviço
   const [nome, setNome] = useState('');
@@ -103,7 +104,40 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
     }
   };
 
-  const handleSubmeterNovoServico = (e: React.FormEvent) => {
+  const limparFormulario = () => {
+    setNome('');
+    setCategoria('REVISAO');
+    setValor('');
+    setTempoEstimado('');
+    setDescricao('');
+    setIncluiPecas(false);
+    setErroForm('');
+    setServicoEmEdicao(null);
+  };
+
+  const fecharModal = () => {
+    setModalNovoAberto(false);
+    limparFormulario();
+  };
+
+  const abrirCadastro = () => {
+    limparFormulario();
+    setModalNovoAberto(true);
+  };
+
+  const abrirEdicao = (servico: ServicoCatalogo) => {
+    setServicoEmEdicao(servico);
+    setNome(servico.nome);
+    setCategoria(servico.categoria);
+    setValor(String(servico.valor));
+    setTempoEstimado(servico.tempoEstimado);
+    setDescricao(servico.descricao);
+    setIncluiPecas(servico.incluiPecas);
+    setErroForm('');
+    setModalNovoAberto(true);
+  };
+
+  const handleSubmeterServico = (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome.trim()) {
       setErroForm('Informe o nome do serviço.');
@@ -122,24 +156,21 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
       return;
     }
 
-    onSalvarServico({
+    const dadosServico = {
       nome: nome.trim(),
       categoria,
       valor: Number(valor),
       tempoEstimado: tempoEstimado.trim(),
       descricao: descricao.trim(),
-      ativo: true,
+      ativo: servicoEmEdicao?.ativo ?? true,
       incluiPecas,
-    });
+    };
 
-    // Reset Form
-    setNome('');
-    setValor('');
-    setTempoEstimado('');
-    setDescricao('');
-    setIncluiPecas(false);
-    setErroForm('');
-    setModalNovoAberto(false);
+    onSalvarServico(servicoEmEdicao
+      ? { ...dadosServico, id: servicoEmEdicao.id }
+      : dadosServico);
+
+    fecharModal();
   };
 
   const totalAtivos = listaServicos.filter((s) => s.ativo).length;
@@ -170,7 +201,7 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
             </button>
           )}
           <button
-            onClick={() => setModalNovoAberto(true)}
+            onClick={abrirCadastro}
             className="px-4 py-2.5 bg-[#E67E22] hover:bg-[#D35400] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-orange-500/20 flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -309,6 +340,14 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
 
                 <div className="flex items-center gap-2">
                   <button
+                    onClick={() => abrirEdicao(item)}
+                    className="p-2 text-slate-400 hover:text-[#E67E22] hover:bg-orange-50 dark:hover:bg-orange-950/50 rounded-xl transition-colors cursor-pointer"
+                    title="Editar serviço"
+                    aria-label={`Editar serviço ${item.nome}`}
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => {
                       if (confirm(`Deseja remover o serviço "${item.nome}" da tabela oficial?`)) {
                         onExcluirServico(item.id);
@@ -357,12 +396,18 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
                   <Wrench className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-white">Cadastrar Novo Serviço de Oficina</h2>
-                  <p className="text-xs text-slate-300">Inclua o procedimento na tabela de preços e catálogo oficial</p>
+                  <h2 className="text-lg font-black text-white">
+                    {servicoEmEdicao ? 'Editar Serviço de Oficina' : 'Cadastrar Novo Serviço de Oficina'}
+                  </h2>
+                  <p className="text-xs text-slate-300">
+                    {servicoEmEdicao
+                      ? 'Atualize os dados do procedimento selecionado'
+                      : 'Inclua o procedimento na tabela de preços e catálogo oficial'}
+                  </p>
                 </div>
               </div>
               <button
-                onClick={() => setModalNovoAberto(false)}
+                onClick={fecharModal}
                 className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -370,7 +415,7 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
             </div>
 
             {/* Conteúdo do Formulário */}
-            <form onSubmit={handleSubmeterNovoServico} className="p-6 space-y-4">
+            <form onSubmit={handleSubmeterServico} className="p-6 space-y-4">
               {erroForm && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl text-xs font-semibold">
                   {erroForm}
@@ -474,7 +519,7 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setModalNovoAberto(false)}
+                  onClick={fecharModal}
                   className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl cursor-pointer"
                 >
                   Cancelar
@@ -483,8 +528,8 @@ export const TabelaServicosView: React.FC<TabelaServicosViewProps> = ({
                   type="submit"
                   className="px-5 py-2.5 bg-[#E67E22] hover:bg-[#D35400] text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/25 flex items-center gap-2 transition-all cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Cadastrar Serviço</span>
+                  {servicoEmEdicao ? <Edit3 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  <span>{servicoEmEdicao ? 'Salvar Alterações' : 'Cadastrar Serviço'}</span>
                 </button>
               </div>
             </form>
