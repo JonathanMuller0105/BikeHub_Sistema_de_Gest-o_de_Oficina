@@ -18,7 +18,7 @@ import {
   CreditCard,
   Pencil
 } from 'lucide-react';
-import { Cliente, AbaNavegacao } from '../types';
+import { Cliente, Bicicleta, AbaNavegacao } from '../types';
 
 interface ClientesViewProps {
   clientes?: Cliente[];
@@ -26,6 +26,8 @@ interface ClientesViewProps {
   onExcluirCliente: (id: number) => void;
   onAbrirOSParaCliente: (clienteId: number) => void;
   onEditarCliente: (cliente: Cliente) => void;
+  onAtualizarBicicleta: (id: number, dados: Omit<Bicicleta, 'id' | 'clienteId'>) => void;
+  onExcluirBicicleta: (clienteId: number, bicicletaId: number) => void;
 }
 
 export const ClientesView: React.FC<ClientesViewProps> = ({
@@ -34,8 +36,25 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
   onExcluirCliente,
   onAbrirOSParaCliente,
   onEditarCliente,
+  onAtualizarBicicleta,
+  onExcluirBicicleta,
 }) => {
   const [termo, setTermo] = useState('');
+  const [bicicletaEmEdicao, setBicicletaEmEdicao] = useState<Bicicleta | null>(null);
+
+  const salvarBicicleta = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!bicicletaEmEdicao) return;
+    const form = new FormData(e.currentTarget);
+    onAtualizarBicicleta(bicicletaEmEdicao.id, {
+      marca: String(form.get('marca') || '').trim(),
+      modelo: String(form.get('modelo') || '').trim(),
+      cor: String(form.get('cor') || '').trim(),
+      ano: Number(form.get('ano')),
+      numeroSerie: String(form.get('numeroSerie') || '').trim() || undefined,
+    });
+    setBicicletaEmEdicao(null);
+  };
 
   const clientesFiltrados = clientes.filter(
     (c) =>
@@ -137,6 +156,16 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
                           >
                             <Bike className="w-3 h-3 text-[#E67E22]" />
                             {b.marca} {b.modelo} ({b.ano})
+                            <button onClick={() => setBicicletaEmEdicao(b)} className="ml-1 text-slate-400 hover:text-blue-600 cursor-pointer" title="Editar bicicleta">
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => confirm(`Excluir a bicicleta ${b.marca} ${b.modelo}?`) && onExcluirBicicleta(cliente.id, b.id)}
+                              className="text-slate-400 hover:text-red-600 cursor-pointer"
+                              title="Excluir bicicleta"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
                           </span>
                         ))
                       ) : (
@@ -190,6 +219,28 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
           </table>
         </div>
       </div>
+
+      {bicicletaEmEdicao && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <form onSubmit={salvarBicicleta} className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-4">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">Editar bicicleta #{bicicletaEmEdicao.id}</h2>
+              <p className="text-xs text-slate-500">Atualize os dados da bicicleta vinculada ao cliente.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input name="marca" defaultValue={bicicletaEmEdicao.marca} required placeholder="Marca" className="px-3 py-2.5 rounded-xl border dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+              <input name="modelo" defaultValue={bicicletaEmEdicao.modelo} required placeholder="Modelo" className="px-3 py-2.5 rounded-xl border dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+              <input name="cor" defaultValue={bicicletaEmEdicao.cor} required placeholder="Cor" className="px-3 py-2.5 rounded-xl border dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+              <input name="ano" type="number" min="1970" defaultValue={bicicletaEmEdicao.ano} required placeholder="Ano" className="px-3 py-2.5 rounded-xl border dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+              <input name="numeroSerie" defaultValue={bicicletaEmEdicao.numeroSerie ?? ''} placeholder="Número de série" className="sm:col-span-2 px-3 py-2.5 rounded-xl border dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+            </div>
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => setBicicletaEmEdicao(null)} className="px-4 py-2 rounded-xl border dark:border-slate-700 dark:text-slate-300">Cancelar</button>
+              <button type="submit" className="px-4 py-2 rounded-xl bg-[#E67E22] text-white font-bold">Salvar alterações</button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

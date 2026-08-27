@@ -48,6 +48,7 @@ import { SpringCodeViewer } from './components/SpringCodeViewer';
 import { useTheme } from './hooks/useTheme';
 import {
   alternarStatusUsuario,
+  atualizarBicicletaCliente,
   atualizarCliente,
   atualizarServico,
   atualizarBicicletaCatalogo,
@@ -56,6 +57,7 @@ import {
   criarItemCatalogo,
   criarServico,
   excluirCliente,
+  excluirBicicletaCliente,
   excluirBicicletaCatalogo,
   excluirServico,
   excluirUsuario,
@@ -213,6 +215,30 @@ export default function App() {
         dispararNotificacao(`Cliente "${atualizado.nome}" atualizado com sucesso!`);
       })
       .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar cliente: ${erro.message}`));
+  };
+
+  const handleAtualizarBicicletaCliente = (bicicletaId: number, dados: Omit<Bicicleta, 'id' | 'clienteId'>) => {
+    atualizarBicicletaCliente(bicicletaId, dados)
+      .then((bicicletaAtualizada) => {
+        setClientes((atuais) => atuais.map((cliente) =>
+          cliente.id === bicicletaAtualizada.clienteId
+            ? { ...cliente, bicicletas: cliente.bicicletas.map((bike) => bike.id === bicicletaId ? bicicletaAtualizada : bike) }
+            : cliente));
+        dispararNotificacao('Bicicleta atualizada com sucesso!');
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar bicicleta: ${erro.message}`));
+  };
+
+  const handleExcluirBicicletaCliente = (clienteId: number, bicicletaId: number) => {
+    excluirBicicletaCliente(bicicletaId)
+      .then(() => {
+        setClientes((atuais) => atuais.map((cliente) =>
+          cliente.id === clienteId
+            ? { ...cliente, bicicletas: cliente.bicicletas.filter((bike) => bike.id !== bicicletaId) }
+            : cliente));
+        dispararNotificacao('Bicicleta removida do cliente com sucesso!');
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao excluir bicicleta: ${erro.message}`));
   };
 
   // Handler para Abrir OS Direta para Cliente
@@ -530,6 +556,8 @@ export default function App() {
               setClienteEmEdicao(cliente);
               setAbaAtiva('cliente-novo');
             }}
+            onAtualizarBicicleta={handleAtualizarBicicletaCliente}
+            onExcluirBicicleta={handleExcluirBicicletaCliente}
           />
         )}
 

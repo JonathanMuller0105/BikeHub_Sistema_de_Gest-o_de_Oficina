@@ -6,6 +6,8 @@ import br.com.projeto.bikehub.repository.BicicletaRepository;
 import br.com.projeto.bikehub.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
+import br.com.projeto.bikehub.repository.ServicoRepository;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -22,11 +24,14 @@ public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final BicicletaRepository bicicletaRepository;
+    private final ServicoRepository servicoRepository;
 
     @Autowired
-    public ClienteService(ClienteRepository clienteRepository, BicicletaRepository bicicletaRepository) {
+    public ClienteService(ClienteRepository clienteRepository, BicicletaRepository bicicletaRepository,
+                          ServicoRepository servicoRepository) {
         this.clienteRepository = clienteRepository;
         this.bicicletaRepository = bicicletaRepository;
+        this.servicoRepository = servicoRepository;
     }
 
     /**
@@ -198,6 +203,31 @@ public class ClienteService {
     @Transactional(readOnly = true)
     public List<Bicicleta> listarBicicletasDoCliente(Long clienteId) {
         return bicicletaRepository.findByClienteIdOrderByModeloAsc(clienteId);
+    }
+
+    @Transactional
+    public Bicicleta atualizarBicicleta(Long id, Bicicleta dados) {
+        Bicicleta bicicleta = bicicletaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Bicicleta não encontrada com ID: " + id));
+        bicicleta.setMarca(dados.getMarca().trim());
+        bicicleta.setModelo(dados.getModelo().trim());
+        bicicleta.setCor(dados.getCor().trim());
+        bicicleta.setAno(dados.getAno());
+        bicicleta.setNumeroSerie(dados.getNumeroSerie() == null || dados.getNumeroSerie().isBlank()
+                ? null : dados.getNumeroSerie().trim());
+        return bicicletaRepository.save(bicicleta);
+    }
+
+    @Transactional
+    public void excluirBicicleta(Long id) {
+        if (!bicicletaRepository.existsById(id)) {
+            throw new IllegalArgumentException("Bicicleta não encontrada com ID: " + id);
+        }
+        if (servicoRepository.existsByBicicletaId(id)) {
+            throw new DataIntegrityViolationException(
+                    "Não é possível excluir a bicicleta porque existem ordens de serviço vinculadas.");
+        }
+        bicicletaRepository.deleteById(id);
     }
 
     /**

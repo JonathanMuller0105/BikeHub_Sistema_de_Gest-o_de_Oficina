@@ -112,6 +112,15 @@ export async function excluirCliente(id: number): Promise<void> {
   }
 }
 
+export const listarBicicletasCliente = (clienteId: number) =>
+  requisicaoApi<Bicicleta[]>(`/clientes/${clienteId}/bicicletas`);
+export const criarBicicletaCliente = (clienteId: number, dados: Omit<Bicicleta, 'id' | 'clienteId'>) =>
+  requisicaoApi<Bicicleta>(`/clientes/${clienteId}/bicicletas`, { method: 'POST', body: JSON.stringify(dados) });
+export const atualizarBicicletaCliente = (id: number, dados: Omit<Bicicleta, 'id' | 'clienteId'>) =>
+  requisicaoApi<Bicicleta>(`/bicicletas/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
+export const excluirBicicletaCliente = (id: number) =>
+  requisicaoApi<void>(`/bicicletas/${id}`, { method: 'DELETE' });
+
 const API_BASE_URL = 'http://localhost:8080/api';
 
 /** Executa as chamadas dos demais módulos com tratamento uniforme de rede e HTTP. */
