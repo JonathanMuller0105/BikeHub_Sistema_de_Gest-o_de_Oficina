@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `usuario`;
 CREATE TABLE `usuario` (
   `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador único do usuário no sistema',
   `username` VARCHAR(50) NOT NULL UNIQUE COMMENT 'Nome de usuário único para login (ex: Admin1234)',
-  `senha` VARCHAR(100) NOT NULL COMMENT 'Senha de acesso do usuário (em produção deve ser hasheada com BCrypt)',
+  `senha` VARCHAR(100) NOT NULL COMMENT 'Hash BCrypt da senha de acesso do usuário',
   `nome_completo` VARCHAR(100) NOT NULL COMMENT 'Nome completo do operador ou administrador',
   `email` VARCHAR(100) DEFAULT NULL COMMENT 'E-mail profissional do funcionário',
   `telefone` VARCHAR(20) DEFAULT NULL COMMENT 'Telefone profissional do funcionário',
@@ -207,8 +207,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- Inserção do Usuário Administrador Padrão exigido
 -- Credenciais: Usuário = Admin1234 / Senha = Admin123456
+-- A senha abaixo já está codificada com BCrypt e não deve ser substituída por texto puro.
 INSERT INTO `usuario` (`username`, `senha`, `nome_completo`, `perfil`, `ativo`)
-VALUES ('Admin1234', 'Admin123456', 'Administrador BikeHub', 'ADMIN', TRUE);
+VALUES ('Admin1234', '$2a$10$KGOJijC7r484FE9tDzeE4unUEeD96n80dRBX73UxVvIfeAu2g5XKi', 'Administrador BikeHub', 'ADMIN', TRUE);
 
 -- Inserção de Clientes de Exemplo
 INSERT INTO `cliente` (`nome`, `telefone`, `email`, `cpf`) VALUES

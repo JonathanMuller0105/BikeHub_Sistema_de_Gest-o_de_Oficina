@@ -5,6 +5,7 @@ import br.com.projeto.bikehub.repository.UsuarioRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -26,10 +27,12 @@ public class UsuarioService {
     public static final String SESSION_USUARIO_LOGADO = "usuarioLogado";
 
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -45,7 +48,7 @@ public class UsuarioService {
         if (!usuarioRepository.existsByUsername("Admin1234")) {
             Usuario admin = new Usuario(
                     "Admin1234",
-                    "Admin123456",
+                    passwordEncoder.encode("Admin123456"),
                     "Administrador BikeHub"
             );
             usuarioRepository.save(admin);
@@ -73,8 +76,8 @@ public class UsuarioService {
 
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
-            // Compara a senha informada com a cadastrada no banco de dados
-            if (usuario.getSenha().equals(senha.trim())) {
+            // Compara a senha informada com o hash BCrypt cadastrado no banco de dados.
+            if (passwordEncoder.matches(senha.trim(), usuario.getSenha())) {
                 // Armazena o usuário autenticado na sessão HTTP
                 session.setAttribute(SESSION_USUARIO_LOGADO, usuario);
                 return true;
@@ -135,7 +138,24 @@ public class UsuarioService {
     /** Cria ou atualiza um funcionário. */
     @Transactional
     public Usuario salvar(Usuario usuario) {
+        String senhaInformada = usuario.getSenha();
+
+        if (usuario.getId() != null && (senhaInformada == null || senhaInformada.isBlank())) {
+            String hashExistente = usuarioRepository.findById(usuario.getId())
+                    .map(Usuario::getSenha)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + usuario.getId()));
+            usuario.setSenha(hashExistente);
+        } else if (senhaInformada == null || senhaInformada.isBlank()) {
+            throw new IllegalArgumentException("A senha é obrigatória para um novo usuário.");
+        } else if (!isBCrypt(senhaInformada)) {
+            usuario.setSenha(passwordEncoder.encode(senhaInformada));
+        }
+
         return usuarioRepository.save(usuario);
+    }
+
+    private boolean isBCrypt(String senha) {
+        return senha.matches("^\\$2[aby]\\$.*");
     }
 
     /** Exclui um funcionário pelo identificador. */
