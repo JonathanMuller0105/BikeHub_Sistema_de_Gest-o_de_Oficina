@@ -26,7 +26,11 @@ export interface AtualizarClienteDados extends CriarClienteDados {
 async function obterMensagemErro(response: Response): Promise<string> {
   try {
     const body = await response.json();
-    return body.mensagem || body.message || `Erro HTTP ${response.status}.`;
+    const detalhesCampos = body.campos && typeof body.campos === 'object'
+      ? Object.entries(body.campos).map(([campo, mensagem]) => `${campo}: ${mensagem}`).join('; ')
+      : '';
+    const mensagem = body.mensagem || body.message || `Erro HTTP ${response.status}.`;
+    return detalhesCampos ? `${mensagem} ${detalhesCampos}` : mensagem;
   } catch {
     return `Erro HTTP ${response.status}.`;
   }

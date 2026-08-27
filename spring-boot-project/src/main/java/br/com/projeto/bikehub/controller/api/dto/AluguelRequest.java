@@ -2,6 +2,9 @@ package br.com.projeto.bikehub.controller.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.AssertTrue;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -21,13 +24,18 @@ public record AluguelRequest(
         @NotNull LocalTime horaRetirada,
         @NotNull LocalDate dataDevolucaoPrevista,
         @NotNull LocalTime horaDevolucaoPrevista,
-        @NotNull Integer quantidadeDiarias,
-        @NotNull BigDecimal valorDiaria,
-        @NotNull BigDecimal valorTotal,
-        @NotNull BigDecimal valorCaucao,
+        @NotNull @Positive Integer quantidadeDiarias,
+        @NotNull @Positive BigDecimal valorDiaria,
+        @NotNull @Positive BigDecimal valorTotal,
+        @NotNull @PositiveOrZero BigDecimal valorCaucao,
         @NotBlank String formaPagamento,
         List<String> acessorios,
         String status,
         @NotNull LocalDate dataCriacao
 ) {
+    @AssertTrue(message = "A devolução prevista não pode ser anterior à retirada.")
+    public boolean isPeriodoValido() {
+        return dataRetirada == null || dataDevolucaoPrevista == null
+                || !dataDevolucaoPrevista.isBefore(dataRetirada);
+    }
 }
