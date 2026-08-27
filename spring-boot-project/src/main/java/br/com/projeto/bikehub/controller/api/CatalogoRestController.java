@@ -9,9 +9,12 @@ import br.com.projeto.bikehub.service.CatalogoService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,5 +52,18 @@ public class CatalogoRestController {
         BicicletaCatalogo salvo = catalogoService.salvar(item);
         return ResponseEntity.created(URI.create("/api/catalogo/" + salvo.getId()))
                 .body(CatalogoResponse.from(salvo));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @Valid @RequestBody CatalogoRequest request) {
+        try {
+            BicicletaCatalogo atualizado = catalogoService.atualizar(
+                    id, request.marca(), request.modelo(), request.cor(), request.ano(),
+                    request.faixaEtaria(), request.tipo(), request.valor(), request.disponivel(),
+                    request.imagemUrl(), request.descricao());
+            return ResponseEntity.ok(CatalogoResponse.from(atualizado));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(404).body(Map.of("mensagem", exception.getMessage()));
+        }
     }
 }

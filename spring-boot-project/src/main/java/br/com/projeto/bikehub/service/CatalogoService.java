@@ -84,6 +84,27 @@ public class CatalogoService {
         return catalogoRepository.save(item);
     }
 
+    /** Atualiza todos os dados editáveis do item sem criar um novo registro. */
+    @Transactional
+    public BicicletaCatalogo atualizar(Long id, String marca, String modelo, String cor, Integer ano,
+                                       FaixaEtaria faixaEtaria, TipoOperacao tipoOperacao,
+                                       BigDecimal valor, Boolean disponivel, String imagemUrl,
+                                       String descricao) {
+        BicicletaCatalogo item = catalogoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Item do catálogo não encontrado com ID: " + id));
+        item.setMarca(marca.trim());
+        item.setModelo(modelo.trim());
+        item.setCor(cor.trim());
+        item.setAno(ano);
+        item.setFaixaEtaria(faixaEtaria);
+        item.setTipoOperacao(tipoOperacao);
+        item.setValor(valor);
+        item.setDisponivel(disponivel == null ? item.getDisponivel() : disponivel);
+        item.setImagemUrl(imagemUrl == null || imagemUrl.isBlank() ? null : imagemUrl.trim());
+        item.setDescricao(descricao == null || descricao.isBlank() ? null : descricao.trim());
+        return catalogoRepository.save(item);
+    }
+
     /**
      * Registra a venda de uma bicicleta semi-nova:
      * Altera a flag de disponibilidade para 'false' para retirá-la das listagens ativas.

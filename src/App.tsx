@@ -50,6 +50,7 @@ import {
   alternarStatusUsuario,
   atualizarCliente,
   atualizarServico,
+  atualizarBicicletaCatalogo,
   atualizarStatusServico,
   criarCliente,
   criarItemCatalogo,
@@ -384,6 +385,15 @@ export default function App() {
       .catch((erro: Error) => dispararNotificacao(`Erro ao cadastrar bicicleta: ${erro.message}`));
   };
 
+  const handleAtualizarBicicletaCatalogo = (id: number, dados: Omit<BicicletaCatalogo, 'id'>) => {
+    atualizarBicicletaCatalogo(id, dados)
+      .then((atualizado) => {
+        setCatalogo((atual) => atual.map((item) => item.id === id ? atualizado : item));
+        dispararNotificacao(`Bicicleta "${atualizado.marca} ${atualizado.modelo}" atualizada com sucesso!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar bicicleta: ${erro.message}`));
+  };
+
   // Handler para Locação Simples / Devolução
   const handleAlternarLocacao = (bikeId: number, alugar: boolean) => {
     setCatalogo(
@@ -572,6 +582,7 @@ export default function App() {
             vendas={vendas}
             onRegistrarNovaVenda={handleRegistrarNovaVenda}
             onCadastrarNovaBicicleta={handleCadastrarNovaBicicleta}
+            onAtualizarBicicleta={handleAtualizarBicicletaCatalogo}
           />
         )}
 
@@ -585,6 +596,7 @@ export default function App() {
             onDevolverAluguel={handleDevolverAluguel}
             onDevolverAluguelComVistoria={handleDevolverAluguelComVistoria}
             onCadastrarNovaBicicleta={handleCadastrarNovaBicicleta}
+            onAtualizarBicicleta={handleAtualizarBicicletaCatalogo}
           />
         )}
 

@@ -143,6 +143,8 @@ export const excluirServico = (id: number) =>
 export const listarCatalogo = () => requisicaoApi<BicicletaCatalogo[]>('/catalogo');
 export const criarItemCatalogo = (dados: Omit<BicicletaCatalogo, 'id'>) =>
   requisicaoApi<BicicletaCatalogo>('/catalogo', { method: 'POST', body: JSON.stringify(dados) });
+export const atualizarBicicletaCatalogo = (id: number, dados: Omit<BicicletaCatalogo, 'id'>) =>
+  requisicaoApi<BicicletaCatalogo>(`/catalogo/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
 
 export const listarUsuarios = () => requisicaoApi<Usuario[]>('/usuarios');
 export const salvarUsuario = (dados: Omit<Usuario, 'id'> | Usuario) =>

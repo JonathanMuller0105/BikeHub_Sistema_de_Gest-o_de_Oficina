@@ -18,7 +18,8 @@ import {
   DollarSign, 
   CreditCard, 
   QrCode,
-  Plus
+  Plus,
+  Pencil
 } from 'lucide-react';
 import { BicicletaCatalogo, Cliente, VendaRegistro } from '../types';
 import { VendaModal } from './VendaModal';
@@ -30,6 +31,7 @@ interface VendasViewProps {
   vendas?: VendaRegistro[];
   onRegistrarNovaVenda: (dados: Omit<VendaRegistro, 'id'>) => void;
   onCadastrarNovaBicicleta?: (novaBike: Omit<BicicletaCatalogo, 'id'>) => void;
+  onAtualizarBicicleta?: (id: number, dados: Omit<BicicletaCatalogo, 'id'>) => void;
 }
 
 export const VendasView: React.FC<VendasViewProps> = ({
@@ -38,12 +40,14 @@ export const VendasView: React.FC<VendasViewProps> = ({
   vendas = [],
   onRegistrarNovaVenda,
   onCadastrarNovaBicicleta,
+  onAtualizarBicicleta,
 }) => {
   const [faixaFiltro, setFaixaFiltro] = useState<string>('TODAS');
   const [termo, setTermo] = useState('');
   const [abaExibicao, setAbaExibicao] = useState<'catalogo' | 'historico'>('catalogo');
   const [bikeParaVenda, setBikeParaVenda] = useState<BicicletaCatalogo | null>(null);
   const [mostrarModalNovaBike, setMostrarModalNovaBike] = useState(false);
+  const [bikeEmEdicao, setBikeEmEdicao] = useState<BicicletaCatalogo | null>(null);
 
   const bicicletasVenda = catalogo.filter((b) => b.tipo === 'VENDA');
 
@@ -253,6 +257,13 @@ export const VendasView: React.FC<VendasViewProps> = ({
                         </span>
                       </div>
 
+                      <button
+                        onClick={() => setBikeEmEdicao(bike)}
+                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-xl transition-colors cursor-pointer"
+                        title="Editar bicicleta"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
                       {bike.disponivel ? (
                         <button
                           onClick={() => setBikeParaVenda(bike)}
@@ -363,15 +374,19 @@ export const VendasView: React.FC<VendasViewProps> = ({
       {/* ======================================================================
           MODAL DE CADASTRO DE NOVA BICICLETA (SEMI-NOVA PARA VENDA)
          ====================================================================== */}
-      {mostrarModalNovaBike && (
+      {(mostrarModalNovaBike || bikeEmEdicao) && (
         <NovaBicicletaModal
-          tipoInicial="VENDA"
-          onFechar={() => setMostrarModalNovaBike(false)}
+          tipoInicial={bikeEmEdicao?.tipo ?? 'VENDA'}
+          itemEmEdicao={bikeEmEdicao}
+          onFechar={() => { setMostrarModalNovaBike(false); setBikeEmEdicao(null); }}
           onSalvarBicicleta={(novaBike) => {
-            if (onCadastrarNovaBicicleta) {
+            if (bikeEmEdicao && onAtualizarBicicleta) {
+              onAtualizarBicicleta(bikeEmEdicao.id, novaBike);
+            } else if (onCadastrarNovaBicicleta) {
               onCadastrarNovaBicicleta(novaBike);
             }
             setMostrarModalNovaBike(false);
+            setBikeEmEdicao(null);
           }}
         />
       )}
