@@ -200,7 +200,7 @@
                             <label for="marcaBicicleta" class="form-label">Marca do Fabricante</label>
                             <input type="text" 
                                    id="marcaBicicleta" 
-                                   name="marcaBicicleta" 
+                                   name="marcaBicicleta" th:value="${bicicleta?.marca}"
                                    class="form-control" 
                                    placeholder="Ex: Caloi, Trek, Specialized, Sense">
                         </div>
@@ -210,7 +210,7 @@
                             <label for="modeloBicicleta" class="form-label">Modelo</label>
                             <input type="text" 
                                    id="modeloBicicleta" 
-                                   name="modeloBicicleta" 
+                                   name="modeloBicicleta" th:value="${bicicleta?.modelo}"
                                    class="form-control" 
                                    placeholder="Ex: Explorer Pro 29, Marlin 7">
                         </div>
@@ -220,7 +220,7 @@
                             <label for="corBicicleta" class="form-label">Cor Predominante</label>
                             <input type="text" 
                                    id="corBicicleta" 
-                                   name="corBicicleta" 
+                                   name="corBicicleta" th:value="${bicicleta?.cor}"
                                    class="form-control" 
                                    placeholder="Ex: Azul Metálico, Preto Fosco">
                         </div>
@@ -232,7 +232,7 @@
                             <label for="anoBicicleta" class="form-label">Ano de Fabricação</label>
                             <input type="number" 
                                    id="anoBicicleta" 
-                                   name="anoBicicleta" 
+                                   name="anoBicicleta" th:value="${bicicleta?.ano}"
                                    class="form-control" 
                                    placeholder="Ex: 2023" 
                                    min="1980" 
@@ -245,7 +245,7 @@
                             <label for="numeroSerie" class="form-label">Número de Série / Chassi (Quadro)</label>
                             <input type="text" 
                                    id="numeroSerie" 
-                                   name="numeroSerie" 
+                                   name="numeroSerie" th:value="${bicicleta?.numeroSerie}"
                                    class="form-control" 
                                    placeholder="Ex: SN-2023-88990">
                         </div>
@@ -257,7 +257,7 @@
                     <a th:href="@{/clientes}" class="btn btn-outline">Cancelar</a>
                     <button type="submit" class="btn btn-primary btn-lg" id="btnSalvarCliente">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        <span>Salvar Cadastro Integrado</span>
+                        <span th:text="${modoEdicao} ? 'Salvar Alterações' : 'Salvar Cadastro Integrado'">Salvar Cadastro Integrado</span>
                     </button>
                 </div>
 
