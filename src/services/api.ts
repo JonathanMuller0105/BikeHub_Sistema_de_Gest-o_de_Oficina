@@ -18,6 +18,10 @@ export interface CriarClienteDados {
   bicicleta?: Omit<Bicicleta, 'id' | 'clienteId'>;
 }
 
+export interface AtualizarClienteDados extends CriarClienteDados {
+  bicicletaId?: number;
+}
+
 // Extrai a mensagem devolvida pelo backend e fornece uma alternativa para respostas sem JSON.
 async function obterMensagemErro(response: Response): Promise<string> {
   try {
@@ -73,6 +77,25 @@ export async function criarCliente(dados: CriarClienteDados): Promise<Cliente> {
   }
 
   return response.json();
+}
+
+export async function atualizarCliente(id: number, dados: AtualizarClienteDados): Promise<Cliente> {
+  return requisicaoApi<Cliente>(`/clientes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      nome: dados.cliente.nome,
+      telefone: dados.cliente.telefone,
+      email: dados.cliente.email,
+      cpf: dados.cliente.cpf,
+      endereco: dados.cliente.endereco,
+      bicicletaId: dados.bicicletaId,
+      marca: dados.bicicleta?.marca,
+      modelo: dados.bicicleta?.modelo,
+      cor: dados.bicicleta?.cor,
+      ano: dados.bicicleta?.ano,
+      numeroSerie: dados.bicicleta?.numeroSerie,
+    }),
+  });
 }
 
 /** Solicita a exclusão e só conclui quando o backend confirma a operação. */

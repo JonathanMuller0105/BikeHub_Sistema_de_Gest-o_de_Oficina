@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -80,6 +81,24 @@ public class ClienteRestController {
             return ResponseEntity.status(409).body(Map.of(
                     "mensagem", "Não foi possível cadastrar o cliente. Verifique se o e-mail já está em uso."
             ));
+        }
+    }
+
+    /** Atualiza dados cadastrais e uma bicicleta selecionada, preservando os IDs. */
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizarCliente(@PathVariable Long id, @Valid @RequestBody ClienteRequest request) {
+        try {
+            Cliente atualizado = clienteService.atualizarCadastroIntegrado(
+                    id, request.nome(), request.telefone(), request.email(), request.cpf(),
+                    request.bicicletaId(), request.marca(), request.modelo(), request.cor(),
+                    request.ano(), request.numeroSerie());
+            return ResponseEntity.ok(ClienteResponse.from(
+                    atualizado, clienteService.listarBicicletasDoCliente(atualizado.getId())));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(404).body(Map.of("mensagem", exception.getMessage()));
+        } catch (DataIntegrityViolationException exception) {
+            return ResponseEntity.status(409).body(Map.of(
+                    "mensagem", "Não foi possível atualizar o cliente. Verifique se o e-mail já está em uso."));
         }
     }
 

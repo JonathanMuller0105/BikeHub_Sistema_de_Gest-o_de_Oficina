@@ -15,7 +15,8 @@ import {
   Bike, 
   Phone, 
   Mail, 
-  CreditCard 
+  CreditCard,
+  Pencil
 } from 'lucide-react';
 import { Cliente, AbaNavegacao } from '../types';
 
@@ -24,6 +25,7 @@ interface ClientesViewProps {
   onNavegar: (aba: AbaNavegacao) => void;
   onExcluirCliente: (id: number) => void;
   onAbrirOSParaCliente: (clienteId: number) => void;
+  onEditarCliente: (cliente: Cliente) => void;
 }
 
 export const ClientesView: React.FC<ClientesViewProps> = ({
@@ -31,6 +33,7 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
   onNavegar,
   onExcluirCliente,
   onAbrirOSParaCliente,
+  onEditarCliente,
 }) => {
   const [termo, setTermo] = useState('');
 
@@ -150,6 +153,13 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
                       >
                         <Wrench className="w-3.5 h-3.5" />
                         <span>+ Abrir OS</span>
+                      </button>
+                      <button
+                        onClick={() => onEditarCliente(cliente)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition-colors cursor-pointer"
+                        title="Editar Cliente"
+                      >
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => {

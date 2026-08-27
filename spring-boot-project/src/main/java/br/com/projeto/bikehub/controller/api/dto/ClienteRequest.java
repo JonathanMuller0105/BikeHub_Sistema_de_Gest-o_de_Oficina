@@ -26,6 +26,7 @@ public record ClienteRequest(
 
         String cpf,
         String endereco,
+        Long bicicletaId,
         String marca,
         String modelo,
         String cor,

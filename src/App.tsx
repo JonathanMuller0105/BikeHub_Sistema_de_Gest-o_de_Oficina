@@ -48,6 +48,7 @@ import { SpringCodeViewer } from './components/SpringCodeViewer';
 import { useTheme } from './hooks/useTheme';
 import {
   alternarStatusUsuario,
+  atualizarCliente,
   atualizarStatusServico,
   criarCliente,
   criarItemCatalogo,
@@ -110,6 +111,7 @@ export default function App() {
   
   // Cliente pré-selecionado para abertura direta de OS
   const [clientePreSelecionadoOS, setClientePreSelecionadoOS] = useState<number | null>(null);
+  const [clienteEmEdicao, setClienteEmEdicao] = useState<Cliente | null>(null);
 
   // Mensagem flash de notificação
   const [notificacao, setNotificacao] = useState<string | null>(null);
@@ -188,6 +190,25 @@ export default function App() {
       .catch((erro: Error) => {
         dispararNotificacao(`Erro ao excluir cliente: ${erro.message}`);
       });
+  };
+
+  const handleAtualizarCliente = (
+    id: number,
+    cliente: Omit<Cliente, 'id' | 'dataCadastro'>,
+    bicicleta: Omit<Bicicleta, 'clienteId'>
+  ) => {
+    atualizarCliente(id, {
+      cliente,
+      bicicleta,
+      bicicletaId: bicicleta.id || undefined,
+    })
+      .then((atualizado) => {
+        setClientes((atuais) => atuais.map((item) => item.id === id ? atualizado : item));
+        setClienteEmEdicao(null);
+        setAbaAtiva('clientes');
+        dispararNotificacao(`Cliente "${atualizado.nome}" atualizado com sucesso!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar cliente: ${erro.message}`));
   };
 
   // Handler para Abrir OS Direta para Cliente
@@ -460,13 +481,22 @@ export default function App() {
             onNavegar={setAbaAtiva}
             onExcluirCliente={handleExcluirCliente}
             onAbrirOSParaCliente={handleAbrirOSParaCliente}
+            onEditarCliente={(cliente) => {
+              setClienteEmEdicao(cliente);
+              setAbaAtiva('cliente-novo');
+            }}
           />
         )}
 
         {abaAtiva === 'cliente-novo' && (
           <ClienteFormView
             onSalvarClienteIntegrado={handleSalvarClienteIntegrado}
-            onNavegar={setAbaAtiva}
+            clienteEmEdicao={clienteEmEdicao}
+            onAtualizarCliente={handleAtualizarCliente}
+            onNavegar={(aba) => {
+              setClienteEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
           />
         )}
 

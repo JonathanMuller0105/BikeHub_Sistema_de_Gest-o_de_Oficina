@@ -129,6 +129,50 @@ public class ClienteService {
         return clienteSalvo;
     }
 
+    /** Atualiza o cliente e, quando informado, uma bicicleta vinculada sem trocar seus IDs. */
+    @Transactional
+    public Cliente atualizarCadastroIntegrado(Long id, String nome, String telefone, String email,
+                                               String cpf, Long bicicletaId, String marcaBicicleta,
+                                               String modeloBicicleta, String corBicicleta,
+                                               Integer anoBicicleta, String numeroSerie) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado com ID: " + id));
+        cliente.setNome(nome.trim());
+        cliente.setTelefone(telefone.trim());
+        cliente.setEmail(email.trim());
+        cliente.setCpf(cpf == null || cpf.isBlank() ? null : cpf.trim());
+
+        boolean possuiDadosBicicleta = marcaBicicleta != null && !marcaBicicleta.isBlank()
+                && modeloBicicleta != null && !modeloBicicleta.isBlank();
+        if (bicicletaId != null) {
+            Bicicleta bicicleta = bicicletaRepository.findById(bicicletaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Bicicleta não encontrada com ID: " + bicicletaId));
+            if (!bicicleta.getCliente().getId().equals(id)) {
+                throw new IllegalArgumentException("A bicicleta informada não pertence ao cliente.");
+            }
+            if (!possuiDadosBicicleta) {
+                throw new IllegalArgumentException("Marca e modelo são obrigatórios para atualizar a bicicleta.");
+            }
+            aplicarDadosBicicleta(bicicleta, marcaBicicleta, modeloBicicleta, corBicicleta, anoBicicleta, numeroSerie);
+            bicicletaRepository.save(bicicleta);
+        } else if (possuiDadosBicicleta) {
+            Bicicleta bicicleta = new Bicicleta();
+            bicicleta.setCliente(cliente);
+            aplicarDadosBicicleta(bicicleta, marcaBicicleta, modeloBicicleta, corBicicleta, anoBicicleta, numeroSerie);
+            bicicletaRepository.save(bicicleta);
+        }
+        return clienteRepository.save(cliente);
+    }
+
+    private void aplicarDadosBicicleta(Bicicleta bicicleta, String marca, String modelo,
+                                       String cor, Integer ano, String numeroSerie) {
+        bicicleta.setMarca(marca.trim());
+        bicicleta.setModelo(modelo.trim());
+        bicicleta.setCor(cor == null || cor.isBlank() ? "Não especificada" : cor.trim());
+        bicicleta.setAno(ano != null && ano > 1900 ? ano : 2023);
+        bicicleta.setNumeroSerie(numeroSerie == null || numeroSerie.isBlank() ? null : numeroSerie.trim());
+    }
+
     /**
      * Cadastra uma nova bicicleta avulsa para um cliente já existente.
      *
