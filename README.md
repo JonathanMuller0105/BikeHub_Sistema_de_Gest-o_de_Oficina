@@ -43,3 +43,10 @@ Não grave credenciais reais nos arquivos versionados. Em produção, configure
 essas variáveis no ambiente de execução ou no sistema de CI/CD. Consulte
 `spring-boot-project/src/main/resources/application.properties.example` para
 ver todas as propriedades disponíveis.
+
+## Validação do banco do zero
+
+O procedimento destrutivo e manual para recriar o banco pelo `schema.sql` e
+validá-lo com o Hibernate está em
+[`docs/validacao-schema.md`](docs/validacao-schema.md). O projeto mantém
+`spring.jpa.hibernate.ddl-auto=update` como configuração padrão.
