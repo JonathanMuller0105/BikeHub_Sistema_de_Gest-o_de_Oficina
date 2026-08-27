@@ -1,23 +1,62 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# BikeHub — Sistema de Gestão de Oficina, Vendas e Aluguel de Bicicletas
 
-# Run and deploy your AI Studio app
+O BikeHub centraliza a gestão de clientes e suas bicicletas, ordens de serviço,
+catálogo de venda e aluguel, vendas, contratos de aluguel e usuários da oficina.
+O front-end React consome uma API REST Spring Boot com persistência em MySQL.
 
-This contains everything you need to run your app locally.
+## Stack utilizada
 
-View your app in AI Studio: https://ai.studio/apps/516f8205-81a0-451a-abfa-0e1d644f1d88
+- **Front-end:** React, TypeScript, Vite e Tailwind CSS.
+- **Back-end:** Java 21 e Spring Boot.
+- **Banco de dados:** MySQL 8.
 
-## Run Locally
+## Como rodar localmente
 
-**Prerequisites:**  Node.js
+### Pré-requisitos
 
+- Node.js e npm.
+- Java 21.
+- Maven 3.9 ou uma IDE com suporte a Maven.
+- MySQL 8 em execução.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 1. Preparar o banco de dados
+
+Inicie o MySQL. Para criar as tabelas e os dados de demonstração de forma
+explícita, abra o arquivo `schema.sql` no MySQL Workbench e execute o script
+completo.
+
+Como alternativa para desenvolvimento, basta garantir que o usuário configurado
+tenha permissão para criar o banco: a URL JDBC contém
+`createDatabaseIfNotExist=true` e o Hibernate está configurado com
+`spring.jpa.hibernate.ddl-auto=update`.
+
+### 2. Configurar e iniciar o back-end
+
+As propriedades estão em
+`spring-boot-project/src/main/resources/application.properties`. Por padrão, a
+aplicação usa o banco `bikehub` em `localhost:3306` com credenciais `root` /
+`root`. Para outras credenciais, defina `DB_USERNAME` e `DB_PASSWORD` conforme
+a seção [Configuração do MySQL](#configuração-do-mysql).
+
+Na raiz do projeto, execute:
+
+```bash
+mvn spring-boot:run
+```
+
+O back-end e a API REST ficarão disponíveis em `http://localhost:8080`.
+
+### 3. Instalar e iniciar o front-end
+
+Em outro terminal, também na raiz do projeto, execute:
+
+```bash
+npm install
+npm run dev
+```
+
+Abra `http://localhost:3000`. O front-end está configurado para consumir a API
+Spring Boot em `http://localhost:8080`.
 
 ## Configuração do MySQL
 
