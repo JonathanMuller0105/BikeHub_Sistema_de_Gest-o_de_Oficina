@@ -6,6 +6,8 @@ import br.com.projeto.bikehub.repository.BicicletaRepository;
 import br.com.projeto.bikehub.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
+import br.com.projeto.bikehub.repository.ServicoRepository;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -22,11 +24,14 @@ public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final BicicletaRepository bicicletaRepository;
+    private final ServicoRepository servicoRepository;
 
     @Autowired
-    public ClienteService(ClienteRepository clienteRepository, BicicletaRepository bicicletaRepository) {
+    public ClienteService(ClienteRepository clienteRepository, BicicletaRepository bicicletaRepository,
+                          ServicoRepository servicoRepository) {
         this.clienteRepository = clienteRepository;
         this.bicicletaRepository = bicicletaRepository;
+        this.servicoRepository = servicoRepository;
     }
 
     /**
@@ -129,6 +134,50 @@ public class ClienteService {
         return clienteSalvo;
     }
 
+    /** Atualiza o cliente e, quando informado, uma bicicleta vinculada sem trocar seus IDs. */
+    @Transactional
+    public Cliente atualizarCadastroIntegrado(Long id, String nome, String telefone, String email,
+                                               String cpf, Long bicicletaId, String marcaBicicleta,
+                                               String modeloBicicleta, String corBicicleta,
+                                               Integer anoBicicleta, String numeroSerie) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado com ID: " + id));
+        cliente.setNome(nome.trim());
+        cliente.setTelefone(telefone.trim());
+        cliente.setEmail(email.trim());
+        cliente.setCpf(cpf == null || cpf.isBlank() ? null : cpf.trim());
+
+        boolean possuiDadosBicicleta = marcaBicicleta != null && !marcaBicicleta.isBlank()
+                && modeloBicicleta != null && !modeloBicicleta.isBlank();
+        if (bicicletaId != null) {
+            Bicicleta bicicleta = bicicletaRepository.findById(bicicletaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Bicicleta não encontrada com ID: " + bicicletaId));
+            if (!bicicleta.getCliente().getId().equals(id)) {
+                throw new IllegalArgumentException("A bicicleta informada não pertence ao cliente.");
+            }
+            if (!possuiDadosBicicleta) {
+                throw new IllegalArgumentException("Marca e modelo são obrigatórios para atualizar a bicicleta.");
+            }
+            aplicarDadosBicicleta(bicicleta, marcaBicicleta, modeloBicicleta, corBicicleta, anoBicicleta, numeroSerie);
+            bicicletaRepository.save(bicicleta);
+        } else if (possuiDadosBicicleta) {
+            Bicicleta bicicleta = new Bicicleta();
+            bicicleta.setCliente(cliente);
+            aplicarDadosBicicleta(bicicleta, marcaBicicleta, modeloBicicleta, corBicicleta, anoBicicleta, numeroSerie);
+            bicicletaRepository.save(bicicleta);
+        }
+        return clienteRepository.save(cliente);
+    }
+
+    private void aplicarDadosBicicleta(Bicicleta bicicleta, String marca, String modelo,
+                                       String cor, Integer ano, String numeroSerie) {
+        bicicleta.setMarca(marca.trim());
+        bicicleta.setModelo(modelo.trim());
+        bicicleta.setCor(cor == null || cor.isBlank() ? "Não especificada" : cor.trim());
+        bicicleta.setAno(ano != null && ano > 1900 ? ano : 2023);
+        bicicleta.setNumeroSerie(numeroSerie == null || numeroSerie.isBlank() ? null : numeroSerie.trim());
+    }
+
     /**
      * Cadastra uma nova bicicleta avulsa para um cliente já existente.
      *
@@ -154,6 +203,31 @@ public class ClienteService {
     @Transactional(readOnly = true)
     public List<Bicicleta> listarBicicletasDoCliente(Long clienteId) {
         return bicicletaRepository.findByClienteIdOrderByModeloAsc(clienteId);
+    }
+
+    @Transactional
+    public Bicicleta atualizarBicicleta(Long id, Bicicleta dados) {
+        Bicicleta bicicleta = bicicletaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Bicicleta não encontrada com ID: " + id));
+        bicicleta.setMarca(dados.getMarca().trim());
+        bicicleta.setModelo(dados.getModelo().trim());
+        bicicleta.setCor(dados.getCor().trim());
+        bicicleta.setAno(dados.getAno());
+        bicicleta.setNumeroSerie(dados.getNumeroSerie() == null || dados.getNumeroSerie().isBlank()
+                ? null : dados.getNumeroSerie().trim());
+        return bicicletaRepository.save(bicicleta);
+    }
+
+    @Transactional
+    public void excluirBicicleta(Long id) {
+        if (!bicicletaRepository.existsById(id)) {
+            throw new IllegalArgumentException("Bicicleta não encontrada com ID: " + id);
+        }
+        if (servicoRepository.existsByBicicletaId(id)) {
+            throw new DataIntegrityViolationException(
+                    "Não é possível excluir a bicicleta porque existem ordens de serviço vinculadas.");
+        }
+        bicicletaRepository.deleteById(id);
     }
 
     /**

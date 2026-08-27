@@ -110,6 +110,20 @@ public class ServicoController {
         return "servicos/formulario";
     }
 
+    @GetMapping("/{id}/editar")
+    public String editar(@PathVariable Long id, HttpSession session, Model model) {
+        if (!usuarioService.isUsuarioLogado(session)) return "redirect:/login";
+        Servico servico = servicoService.buscarPorId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ordem de serviço não encontrada."));
+        model.addAttribute("servico", servico);
+        model.addAttribute("clientes", clienteService.listarTodos());
+        model.addAttribute("bicicletasCliente", clienteService.listarBicicletasDoCliente(servico.getCliente().getId()));
+        model.addAttribute("todosStatus", StatusServico.values());
+        model.addAttribute("usuarioLogado", usuarioService.getUsuarioLogado(session));
+        model.addAttribute("modoEdicao", true);
+        return "servicos/formulario";
+    }
+
     /**
      * Endpoint REST/AJAX: Retorna as bicicletas de um cliente específico em formato JSON
      * para atualizar dinamicamente o segundo select do formulário via JavaScript.
@@ -133,7 +147,8 @@ public class ServicoController {
                                 @RequestParam("descricao") String descricao,
                                 @RequestParam("valor") BigDecimal valor,
                                 @RequestParam("dataEntrega") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataEntrega,
-                                @RequestParam(value = "status", required = false) StatusServico status,
+                                 @RequestParam(value = "status", required = false) StatusServico status,
+                                 @RequestParam(value = "id", required = false) Long id,
                                 HttpSession session,
                                 Model model,
                                 RedirectAttributes redirectAttributes) {
@@ -143,7 +158,9 @@ public class ServicoController {
         }
 
         try {
-            Servico servico = servicoService.abrirOrdemServico(clienteId, bicicletaId, descricao, valor, dataEntrega);
+            Servico servico = id == null
+                    ? servicoService.abrirOrdemServico(clienteId, bicicletaId, descricao, valor, dataEntrega)
+                    : servicoService.atualizar(id, descricao, valor, dataEntrega);
             if (status != null && status != StatusServico.PENDENTE) {
                 servicoService.atualizarStatus(servico.getId(), status);
             }

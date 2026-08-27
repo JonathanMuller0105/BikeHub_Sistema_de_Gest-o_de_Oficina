@@ -21,7 +21,9 @@ import {
   Bike,
   Plus,
   Layers,
-  FileCheck
+  FileCheck,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { BicicletaCatalogo, Cliente, AluguelRegistro } from '../types';
 import { AluguelModal } from './AluguelModal';
@@ -47,6 +49,8 @@ interface AluguelViewProps {
     observacaoDevolucao: string;
   }) => void;
   onCadastrarNovaBicicleta?: (novaBike: Omit<BicicletaCatalogo, 'id'>) => void;
+  onAtualizarBicicleta?: (id: number, dados: Omit<BicicletaCatalogo, 'id'>) => void;
+  onExcluirBicicleta?: (id: number) => void;
 }
 
 export const AluguelView: React.FC<AluguelViewProps> = ({
@@ -58,6 +62,8 @@ export const AluguelView: React.FC<AluguelViewProps> = ({
   onDevolverAluguel,
   onDevolverAluguelComVistoria,
   onCadastrarNovaBicicleta,
+  onAtualizarBicicleta,
+  onExcluirBicicleta,
 }) => {
   const [faixaFiltro, setFaixaFiltro] = useState<string>('TODAS');
   const [termo, setTermo] = useState('');
@@ -67,6 +73,7 @@ export const AluguelView: React.FC<AluguelViewProps> = ({
   const [bikeParaAluguel, setBikeParaAluguel] = useState<BicicletaCatalogo | null>(null);
   const [aluguelParaDevolucao, setAluguelParaDevolucao] = useState<AluguelRegistro | null>(null);
   const [mostrarModalNovaBike, setMostrarModalNovaBike] = useState(false);
+  const [bikeEmEdicao, setBikeEmEdicao] = useState<BicicletaCatalogo | null>(null);
 
   const bicicletasAluguel = catalogo.filter((b) => b.tipo === 'ALUGUEL');
 
@@ -315,6 +322,22 @@ export const AluguelView: React.FC<AluguelViewProps> = ({
                         </span>
                       </div>
 
+                      <button
+                        onClick={() => setBikeEmEdicao(bike)}
+                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-xl transition-colors cursor-pointer"
+                        title="Editar bicicleta"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      {onExcluirBicicleta && (
+                        <button
+                          onClick={() => confirm(`Excluir ${bike.marca} ${bike.modelo} do catálogo?`) && onExcluirBicicleta(bike.id)}
+                          className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-xl transition-colors cursor-pointer"
+                          title="Excluir bicicleta"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                       {bike.disponivel ? (
                         <button
                           onClick={() => setBikeParaAluguel(bike)}
@@ -474,15 +497,19 @@ export const AluguelView: React.FC<AluguelViewProps> = ({
       {/* ======================================================================
           MODAL DE CADASTRO DE NOVA BICICLETA (FROTA DE ALUGUEL)
          ====================================================================== */}
-      {mostrarModalNovaBike && (
+      {(mostrarModalNovaBike || bikeEmEdicao) && (
         <NovaBicicletaModal
-          tipoInicial="ALUGUEL"
-          onFechar={() => setMostrarModalNovaBike(false)}
+          tipoInicial={bikeEmEdicao?.tipo ?? 'ALUGUEL'}
+          itemEmEdicao={bikeEmEdicao}
+          onFechar={() => { setMostrarModalNovaBike(false); setBikeEmEdicao(null); }}
           onSalvarBicicleta={(novaBike) => {
-            if (onCadastrarNovaBicicleta) {
+            if (bikeEmEdicao && onAtualizarBicicleta) {
+              onAtualizarBicicleta(bikeEmEdicao.id, novaBike);
+            } else if (onCadastrarNovaBicicleta) {
               onCadastrarNovaBicicleta(novaBike);
             }
             setMostrarModalNovaBike(false);
+            setBikeEmEdicao(null);
           }}
         />
       )}

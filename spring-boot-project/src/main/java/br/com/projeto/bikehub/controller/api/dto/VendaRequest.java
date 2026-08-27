@@ -2,6 +2,8 @@ package br.com.projeto.bikehub.controller.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -13,12 +15,12 @@ public record VendaRequest(
         @NotBlank String clienteCpf,
         @NotBlank String clienteTelefone,
         String clienteEmail,
-        @NotNull BigDecimal valorOriginal,
-        @NotNull BigDecimal desconto,
-        @NotNull BigDecimal valorFinal,
+        @NotNull @Positive BigDecimal valorOriginal,
+        @NotNull @PositiveOrZero BigDecimal desconto,
+        @NotNull @Positive BigDecimal valorFinal,
         @NotBlank String formaPagamento,
-        Integer parcelas,
+        @Positive Integer parcelas,
         @NotNull LocalDate dataVenda,
-        @NotNull Integer garantiaMeses
+        @NotNull @PositiveOrZero Integer garantiaMeses
 ) {
 }

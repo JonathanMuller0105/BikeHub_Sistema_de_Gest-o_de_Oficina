@@ -33,6 +33,7 @@ interface NovaBicicletaModalProps {
   tipoInicial?: TipoCatalogo;
   onFechar: () => void;
   onSalvarBicicleta: (novaBike: Omit<BicicletaCatalogo, 'id'>) => void;
+  itemEmEdicao?: BicicletaCatalogo | null;
 }
 
 // Galeria de fotos de alta qualidade para bicicletas
@@ -75,17 +76,19 @@ export const NovaBicicletaModal: React.FC<NovaBicicletaModalProps> = ({
   tipoInicial = 'ALUGUEL',
   onFechar,
   onSalvarBicicleta,
+  itemEmEdicao = null,
 }) => {
-  const [tipo, setTipo] = useState<TipoCatalogo>(tipoInicial);
-  const [marca, setMarca] = useState('Sense');
-  const [modelo, setModelo] = useState('');
-  const [ano, setAno] = useState<number>(new Date().getFullYear());
-  const [cor, setCor] = useState('Preto Fosco com Grafite');
-  const [faixaEtaria, setFaixaEtaria] = useState<FaixaEtaria>('ADULTO');
-  const [valor, setValor] = useState<number>(tipoInicial === 'ALUGUEL' ? 65.00 : 2800.00);
-  const [numeroSerie, setNumeroSerie] = useState(() => `SN-${Math.random().toString(36).substring(2, 9).toUpperCase()}`);
-  const [imagemUrl, setImagemUrl] = useState(IMAGENS_PREDEFINIDAS[0].url);
-  const [descricao, setDescricao] = useState('');
+  const [tipo, setTipo] = useState<TipoCatalogo>(itemEmEdicao?.tipo ?? tipoInicial);
+  const [marca, setMarca] = useState(itemEmEdicao?.marca ?? 'Sense');
+  const [modelo, setModelo] = useState(itemEmEdicao?.modelo ?? '');
+  const [ano, setAno] = useState<number>(itemEmEdicao?.ano ?? new Date().getFullYear());
+  const [cor, setCor] = useState(itemEmEdicao?.cor ?? 'Preto Fosco com Grafite');
+  const [faixaEtaria, setFaixaEtaria] = useState<FaixaEtaria>(itemEmEdicao?.faixaEtaria ?? 'ADULTO');
+  const [valor, setValor] = useState<number>(itemEmEdicao?.valor ?? (tipoInicial === 'ALUGUEL' ? 65.00 : 2800.00));
+  const [numeroSerie, setNumeroSerie] = useState(() => itemEmEdicao?.numeroSerie ?? `SN-${Math.random().toString(36).substring(2, 9).toUpperCase()}`);
+  const [imagemUrl, setImagemUrl] = useState(itemEmEdicao?.imagemUrl ?? IMAGENS_PREDEFINIDAS[0].url);
+  const [descricao, setDescricao] = useState(itemEmEdicao?.descricao ?? '');
+  const [disponivel, setDisponivel] = useState(itemEmEdicao?.disponivel ?? true);
   const [erro, setErro] = useState('');
 
   // Ao alternar o tipo (Aluguel vs Venda), ajusta valor sugerido padrão
@@ -140,7 +143,7 @@ export const NovaBicicletaModal: React.FC<NovaBicicletaModalProps> = ({
       valor: Number(valor),
       descricao: descricao.trim() || `${marca} ${modelo} ${ano} - Cor ${cor}. Pronta para uso.`,
       imagemUrl: imagemUrl.trim(),
-      disponivel: true,
+      disponivel,
       numeroSerie: numeroSerie.trim() || undefined,
     });
   };
@@ -158,15 +161,16 @@ export const NovaBicicletaModal: React.FC<NovaBicicletaModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400 bg-orange-500/20 px-2 py-0.5 rounded-full border border-orange-500/30">
-                  Novo Cadastro
+                  {itemEmEdicao ? `Editando #${itemEmEdicao.id}` : 'Novo Cadastro'}
                 </span>
                 <span className="text-xs text-slate-300 font-medium">Catálogo BikeHub</span>
               </div>
               <h2 className="text-lg sm:text-xl font-black text-white mt-0.5">
-                {tipo === 'ALUGUEL' ? 'Incluir Bicicleta na Frota de Aluguel' : 'Cadastrar Bicicleta Semi-Nova para Venda'}
+                {itemEmEdicao ? 'Editar Bicicleta do Catálogo' : tipo === 'ALUGUEL' ? 'Incluir Bicicleta na Frota de Aluguel' : 'Cadastrar Bicicleta Semi-Nova para Venda'}
               </h2>
             </div>
           </div>
+
           <button
             onClick={onFechar}
             className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
@@ -182,6 +186,13 @@ export const NovaBicicletaModal: React.FC<NovaBicicletaModalProps> = ({
               <span className="w-2 h-2 rounded-full bg-red-500"></span>
               <span>{erro}</span>
             </div>
+          )}
+
+          {itemEmEdicao && (
+            <label className="flex items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 cursor-pointer">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Disponível para {tipo === 'ALUGUEL' ? 'aluguel' : 'venda'}</span>
+              <input type="checkbox" checked={disponivel} onChange={(e) => setDisponivel(e.target.checked)} className="w-5 h-5 accent-[#E67E22]" />
+            </label>
           )}
 
           {/* Seleção do Tipo / Destino */}
@@ -449,7 +460,7 @@ export const NovaBicicletaModal: React.FC<NovaBicicletaModalProps> = ({
               className="px-6 py-2.5 bg-[#E67E22] hover:bg-[#D35400] text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-orange-500/25 flex items-center gap-2 transition-all cursor-pointer"
             >
               <Check className="w-4 h-4" />
-              <span>Salvar no Catálogo BikeHub</span>
+              <span>{itemEmEdicao ? 'Salvar Alterações' : 'Salvar no Catálogo BikeHub'}</span>
             </button>
           </div>
         </form>

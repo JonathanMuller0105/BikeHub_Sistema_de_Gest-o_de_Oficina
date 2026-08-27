@@ -110,6 +110,17 @@ public class ServicoService {
         return servicoRepository.save(servico);
     }
 
+    /** Atualiza os dados editáveis da OS sem alterar seu ID, vínculo ou status. */
+    @Transactional
+    public Servico atualizar(Long id, String descricao, BigDecimal valor, LocalDate dataEntrega) {
+        Servico servico = servicoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ordem de Serviço não encontrada com ID: " + id));
+        servico.setDescricao(descricao.trim());
+        servico.setValor(valor);
+        servico.setDataEntrega(dataEntrega);
+        return servicoRepository.save(servico);
+    }
+
     /**
      * Atualiza o status de execução de uma Ordem de Serviço.
      * Método chave utilizado tanto pelas rotas tradicionais quanto por chamadas AJAX/JavaScript.

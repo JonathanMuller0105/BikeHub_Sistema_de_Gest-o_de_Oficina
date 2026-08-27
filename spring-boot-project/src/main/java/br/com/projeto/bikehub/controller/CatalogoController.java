@@ -85,16 +85,7 @@ public class CatalogoController {
         if (!usuarioService.isUsuarioLogado(session)) {
             return "redirect:/login";
         }
-
-        try {
-            BicicletaCatalogo vendida = catalogoService.registrarVenda(id);
-            redirectAttributes.addFlashAttribute("mensagemSucesso",
-                    "Venda registrada com sucesso! Bicicleta '" + vendida.getMarca() + " " + vendida.getModelo() + "' foi marcada como vendida.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("mensagemErro", "Erro ao registrar venda: " + e.getMessage());
-        }
-
-        return "redirect:/vendas";
+        return "redirect:/vendas/" + id + "/confirmar";
     }
 
     /**
@@ -147,15 +138,7 @@ public class CatalogoController {
             return "redirect:/login";
         }
 
-        try {
-            BicicletaCatalogo alugada = catalogoService.realizarAluguel(id);
-            redirectAttributes.addFlashAttribute("mensagemSucesso",
-                    "Locação confirmada com sucesso para a bicicleta '" + alugada.getMarca() + " " + alugada.getModelo() + "'!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("mensagemErro", "Erro ao realizar locação: " + e.getMessage());
-        }
-
-        return "redirect:/aluguel";
+        return "redirect:/aluguel/" + id + "/confirmar";
     }
 
     /**
@@ -169,14 +152,8 @@ public class CatalogoController {
             return "redirect:/login";
         }
 
-        try {
-            BicicletaCatalogo devolvida = catalogoService.registrarDevolucao(id);
-            redirectAttributes.addFlashAttribute("mensagemSucesso",
-                    "Devolução registrada com sucesso! A bicicleta '" + devolvida.getMarca() + " " + devolvida.getModelo() + "' está disponível para novo aluguel.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("mensagemErro", "Erro ao registrar devolução: " + e.getMessage());
-        }
-
-        return "redirect:/aluguel";
+        redirectAttributes.addFlashAttribute("mensagemErro",
+                "Selecione o contrato no histórico para registrar a devolução.");
+        return "redirect:/aluguel/historico";
     }
 }

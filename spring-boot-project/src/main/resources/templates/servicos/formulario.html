@@ -65,6 +65,7 @@
 
             <!-- Formulário de Nova OS -->
             <form th:action="@{/servicos/salvar}" method="POST" class="unified-form" id="formNovaOS">
+                <input type="hidden" name="id" th:value="${servico.id}">
                 
                 <section class="form-section-card">
                     <div class="section-badge-header">
@@ -83,7 +84,8 @@
                                 <option value="">-- Selecione o Cliente --</option>
                                 <option th:each="c : ${clientes}" 
                                         th:value="${c.id}" 
-                                        th:text="${c.nome + ' (' + c.telefone + ')'}">
+                                        th:text="${c.nome + ' (' + c.telefone + ')'}"
+                                        th:selected="${servico.cliente != null and servico.cliente.id == c.id}">
                                     Carlos Silveira ((11) 98765-4321)
                                 </option>
                             </select>
@@ -94,6 +96,9 @@
                             <label for="selectBicicleta" class="form-label">Bicicleta do Cliente <span class="required-star">*</span></label>
                             <select id="selectBicicleta" name="bicicletaId" class="form-control" required>
                                 <option value="">-- Primeiro selecione um cliente acima --</option>
+                                <option th:each="b : ${bicicletasCliente}" th:value="${b.id}"
+                                        th:text="${b.descricaoCompleta}"
+                                        th:selected="${servico.bicicleta != null and servico.bicicleta.id == b.id}"></option>
                             </select>
                             <span class="form-hint">Não encontrou a bicicleta? <a th:href="@{/clientes/novo}">Cadastre o cliente com a bike aqui</a></span>
                         </div>
@@ -117,7 +122,7 @@
                                   rows="4" 
                                   class="form-control" 
                                   placeholder="Ex: Revisão geral: sangria de freios hidráulicos, troca de cabos e conduítes, alinhamento de gancheira e regulagem de câmbio traseiro..."
-                                  required></textarea>
+                                  th:text="${servico.descricao}" required></textarea>
                     </div>
 
                     <div class="form-row-3">
@@ -129,7 +134,7 @@
                                    id="valor" 
                                    name="valor" 
                                    class="form-control" 
-                                   placeholder="Ex: 180.00" 
+                                   placeholder="Ex: 180.00" th:value="${servico.valor}"
                                    required>
                         </div>
 
@@ -151,7 +156,7 @@
                                 <option th:each="st : ${todosStatus}" 
                                         th:value="${st}" 
                                         th:text="${st.descricao}"
-                                        th:selected="${st.name() == 'PENDENTE'}">
+                                        th:selected="${servico.status != null ? st == servico.status : st.name() == 'PENDENTE'}">
                                     Pendente
                                 </option>
                             </select>

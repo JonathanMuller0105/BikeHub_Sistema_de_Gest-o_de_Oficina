@@ -1,0 +1,52 @@
+{
+  "info": {"name": "BikeHub API", "description": "Collection dos endpoints REST do BikeHub. Venda e aluguel são históricos imutáveis.", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8080"},
+    {"key": "clienteId", "value": "1"}, {"key": "bicicletaId", "value": "1"},
+    {"key": "servicoId", "value": "1"}, {"key": "catalogoId", "value": "1"},
+    {"key": "usuarioId", "value": "1"}, {"key": "aluguelId", "value": "1"}
+  ],
+  "item": [
+    {"name":"Clientes","item":[
+      {"name":"Listar clientes","request":{"method":"GET","url":"{{baseUrl}}/api/clientes"}},
+      {"name":"Criar cliente","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"nome\": \"Maria Oliveira\",\n  \"telefone\": \"(11) 99999-0000\",\n  \"email\": \"maria@example.com\",\n  \"cpf\": \"123.456.789-00\",\n  \"marca\": \"Caloi\",\n  \"modelo\": \"Explorer\",\n  \"cor\": \"Azul\",\n  \"ano\": 2024\n}"},"url":"{{baseUrl}}/api/clientes"}},
+      {"name":"Atualizar cliente","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"nome\": \"Maria Oliveira Silva\",\n  \"telefone\": \"(11) 99999-0000\",\n  \"email\": \"maria@example.com\",\n  \"cpf\": \"123.456.789-00\"\n}"},"url":"{{baseUrl}}/api/clientes/{{clienteId}}"}},
+      {"name":"Excluir cliente","request":{"method":"DELETE","url":"{{baseUrl}}/api/clientes/{{clienteId}}"}}
+    ]},
+    {"name":"Bicicletas de clientes","item":[
+      {"name":"Listar bicicletas do cliente","request":{"method":"GET","url":"{{baseUrl}}/api/clientes/{{clienteId}}/bicicletas"}},
+      {"name":"Adicionar bicicleta","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"marca\": \"Trek\",\n  \"modelo\": \"Marlin 7\",\n  \"cor\": \"Preta\",\n  \"ano\": 2024,\n  \"numeroSerie\": \"TRK-2024-001\"\n}"},"url":"{{baseUrl}}/api/clientes/{{clienteId}}/bicicletas"}},
+      {"name":"Atualizar bicicleta","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"marca\": \"Trek\",\n  \"modelo\": \"Marlin 8\",\n  \"cor\": \"Vermelha\",\n  \"ano\": 2025,\n  \"numeroSerie\": \"TRK-2024-001\"\n}"},"url":"{{baseUrl}}/api/bicicletas/{{bicicletaId}}"}},
+      {"name":"Excluir bicicleta","request":{"method":"DELETE","url":"{{baseUrl}}/api/bicicletas/{{bicicletaId}}"}}
+    ]},
+    {"name":"Serviços","item":[
+      {"name":"Listar OS","request":{"method":"GET","url":"{{baseUrl}}/api/servicos"}},
+      {"name":"Criar OS","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"clienteId\": {{clienteId}},\n  \"bicicletaId\": {{bicicletaId}},\n  \"descricao\": \"Revisão geral\",\n  \"valor\": 180.00,\n  \"dataEntrega\": \"2026-09-05\"\n}"},"url":"{{baseUrl}}/api/servicos"}},
+      {"name":"Atualizar OS","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"clienteId\": {{clienteId}},\n  \"bicicletaId\": {{bicicletaId}},\n  \"descricao\": \"Revisão e troca de cabos\",\n  \"valor\": 250.00,\n  \"dataEntrega\": \"2026-09-06\"\n}"},"url":"{{baseUrl}}/api/servicos/{{servicoId}}"}},
+      {"name":"Atualizar status da OS","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"status\":\"MANUTENCAO\"}"},"url":"{{baseUrl}}/api/servicos/{{servicoId}}/status"}},
+      {"name":"Excluir OS","request":{"method":"DELETE","url":"{{baseUrl}}/api/servicos/{{servicoId}}"}}
+    ]},
+    {"name":"Catálogo","item":[
+      {"name":"Listar catálogo","request":{"method":"GET","url":"{{baseUrl}}/api/catalogo"}},
+      {"name":"Criar item","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"marca\": \"Sense\", \"modelo\": \"Impact\", \"ano\": 2025, \"cor\": \"Cinza\",\n  \"descricao\": \"Mountain bike\", \"valor\": 3500.00, \"faixaEtaria\": \"ADULTO\",\n  \"tipo\": \"VENDA\", \"imagemUrl\": \"https://example.com/bike.jpg\", \"disponivel\": true\n}"},"url":"{{baseUrl}}/api/catalogo"}},
+      {"name":"Atualizar item","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"marca\": \"Sense\", \"modelo\": \"Impact Pro\", \"ano\": 2025, \"cor\": \"Cinza\",\n  \"descricao\": \"Mountain bike atualizada\", \"valor\": 3700.00, \"faixaEtaria\": \"ADULTO\",\n  \"tipo\": \"VENDA\", \"imagemUrl\": \"https://example.com/bike.jpg\", \"disponivel\": true\n}"},"url":"{{baseUrl}}/api/catalogo/{{catalogoId}}"}},
+      {"name":"Excluir item","request":{"method":"DELETE","url":"{{baseUrl}}/api/catalogo/{{catalogoId}}"}}
+    ]},
+    {"name":"Usuários","item":[
+      {"name":"Listar usuários","request":{"method":"GET","url":"{{baseUrl}}/api/usuarios"}},
+      {"name":"Criar usuário","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"login\": \"mecanico1\", \"senha\": \"Senha123\", \"nomeCompleto\": \"Mecânico BikeHub\",\n  \"email\": \"mecanico@example.com\", \"cargo\": \"Mecânico\", \"perfil\": \"MECANICO\", \"ativo\": true\n}"},"url":"{{baseUrl}}/api/usuarios"}},
+      {"name":"Editar usuário","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"id\": {{usuarioId}}, \"login\": \"mecanico1\", \"senha\": \"\", \"nomeCompleto\": \"Mecânico Sênior\",\n  \"email\": \"mecanico@example.com\", \"cargo\": \"Mecânico\", \"perfil\": \"MECANICO\", \"ativo\": true\n}"},"url":"{{baseUrl}}/api/usuarios"}},
+      {"name":"Alternar status","request":{"method":"PATCH","url":"{{baseUrl}}/api/usuarios/{{usuarioId}}/status"}},
+      {"name":"Excluir usuário","request":{"method":"DELETE","url":"{{baseUrl}}/api/usuarios/{{usuarioId}}"}}
+    ]},
+    {"name":"Vendas","item":[
+      {"name":"Listar histórico","request":{"method":"GET","url":"{{baseUrl}}/api/vendas"}},
+      {"name":"Registrar venda","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"bicicletaId\": {{catalogoId}}, \"clienteNome\": \"João Comprador\", \"clienteCpf\": \"123.456.789-00\",\n  \"clienteTelefone\": \"(11) 98888-7777\", \"valorOriginal\": 3500.00, \"desconto\": 100.00,\n  \"valorFinal\": 3400.00, \"formaPagamento\": \"PIX\", \"parcelas\": 1, \"dataVenda\": \"2026-08-27\", \"garantiaMeses\": 6\n}"},"url":"{{baseUrl}}/api/vendas"}}
+    ]},
+    {"name":"Aluguéis","item":[
+      {"name":"Listar contratos","request":{"method":"GET","url":"{{baseUrl}}/api/alugueis"}},
+      {"name":"Registrar aluguel","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"codigoContrato\": \"BH-POSTMAN-001\", \"bicicletaId\": {{catalogoId}}, \"clienteNome\": \"Ana Locatária\",\n  \"clienteCpf\": \"987.654.321-00\", \"clienteTelefone\": \"(11) 97777-6666\",\n  \"dataRetirada\": \"2026-08-27\", \"horaRetirada\": \"09:00:00\", \"dataDevolucaoPrevista\": \"2026-08-29\",\n  \"horaDevolucaoPrevista\": \"18:00:00\", \"quantidadeDiarias\": 2, \"valorDiaria\": 80.00,\n  \"valorTotal\": 160.00, \"valorCaucao\": 50.00, \"formaPagamento\": \"PIX\", \"acessorios\": [], \"dataCriacao\": \"2026-08-27\"\n}"},"url":"{{baseUrl}}/api/alugueis"}},
+      {"name":"Registrar devolução","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"dataDevolucaoEfetiva\": \"2026-08-29\", \"horaDevolucaoEfetiva\": \"17:30:00\",\n  \"valorCaucaoDevolvido\": 50.00, \"taxaAvariaOuAtraso\": 0.00,\n  \"metodoDevolucaoCaucao\": \"PIX\", \"observacaoDevolucao\": \"Bicicleta devolvida sem avarias\"\n}"},"url":"{{baseUrl}}/api/alugueis/{{aluguelId}}/devolucao"}}
+    ]}
+  ]
+}

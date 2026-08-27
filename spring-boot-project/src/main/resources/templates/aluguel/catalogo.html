@@ -143,20 +143,16 @@
                         </div>
 
                         <!-- Botão Alugar Agora se Disponível -->
-                        <form th:if="${b.disponivel}" th:action="@{/aluguel/{id}/alugar(id=${b.id})}" method="POST" onsubmit="return confirm('Confirmar a locação desta bicicleta?');">
-                            <button type="submit" class="btn btn-primary btn-block">
+                        <a th:if="${b.disponivel}" th:href="@{/aluguel/{id}/confirmar(id=${b.id})}" class="btn btn-primary btn-block">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
                                 <span>Alugar Agora</span>
-                            </button>
-                        </form>
+                        </a>
 
                         <!-- Botão de Devolver se já estiver Alugada -->
-                        <form th:if="${!b.disponivel}" th:action="@{/aluguel/{id}/devolver(id=${b.id})}" method="POST" onsubmit="return confirm('Registrar a devolução desta bicicleta para torná-la disponível novamente?');">
-                            <button type="submit" class="btn btn-secondary btn-block">
+                        <a th:if="${!b.disponivel}" th:href="@{/aluguel/historico}" class="btn btn-secondary btn-block">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
                                 <span>Registrar Devolução</span>
-                            </button>
-                        </form>
+                        </a>
                     </div>
 
                 </div>

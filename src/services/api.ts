@@ -18,11 +18,19 @@ export interface CriarClienteDados {
   bicicleta?: Omit<Bicicleta, 'id' | 'clienteId'>;
 }
 
+export interface AtualizarClienteDados extends CriarClienteDados {
+  bicicletaId?: number;
+}
+
 // Extrai a mensagem devolvida pelo backend e fornece uma alternativa para respostas sem JSON.
 async function obterMensagemErro(response: Response): Promise<string> {
   try {
     const body = await response.json();
-    return body.mensagem || body.message || `Erro HTTP ${response.status}.`;
+    const detalhesCampos = body.campos && typeof body.campos === 'object'
+      ? Object.entries(body.campos).map(([campo, mensagem]) => `${campo}: ${mensagem}`).join('; ')
+      : '';
+    const mensagem = body.mensagem || body.message || `Erro HTTP ${response.status}.`;
+    return detalhesCampos ? `${mensagem} ${detalhesCampos}` : mensagem;
   } catch {
     return `Erro HTTP ${response.status}.`;
   }
@@ -75,6 +83,25 @@ export async function criarCliente(dados: CriarClienteDados): Promise<Cliente> {
   return response.json();
 }
 
+export async function atualizarCliente(id: number, dados: AtualizarClienteDados): Promise<Cliente> {
+  return requisicaoApi<Cliente>(`/clientes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      nome: dados.cliente.nome,
+      telefone: dados.cliente.telefone,
+      email: dados.cliente.email,
+      cpf: dados.cliente.cpf,
+      endereco: dados.cliente.endereco,
+      bicicletaId: dados.bicicletaId,
+      marca: dados.bicicleta?.marca,
+      modelo: dados.bicicleta?.modelo,
+      cor: dados.bicicleta?.cor,
+      ano: dados.bicicleta?.ano,
+      numeroSerie: dados.bicicleta?.numeroSerie,
+    }),
+  });
+}
+
 /** Solicita a exclusão e só conclui quando o backend confirma a operação. */
 export async function excluirCliente(id: number): Promise<void> {
   let response: Response;
@@ -88,6 +115,15 @@ export async function excluirCliente(id: number): Promise<void> {
     throw new Error(await obterMensagemErro(response));
   }
 }
+
+export const listarBicicletasCliente = (clienteId: number) =>
+  requisicaoApi<Bicicleta[]>(`/clientes/${clienteId}/bicicletas`);
+export const criarBicicletaCliente = (clienteId: number, dados: Omit<Bicicleta, 'id' | 'clienteId'>) =>
+  requisicaoApi<Bicicleta>(`/clientes/${clienteId}/bicicletas`, { method: 'POST', body: JSON.stringify(dados) });
+export const atualizarBicicletaCliente = (id: number, dados: Omit<Bicicleta, 'id' | 'clienteId'>) =>
+  requisicaoApi<Bicicleta>(`/bicicletas/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
+export const excluirBicicletaCliente = (id: number) =>
+  requisicaoApi<void>(`/bicicletas/${id}`, { method: 'DELETE' });
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -110,6 +146,8 @@ async function requisicaoApi<T>(caminho: string, init?: RequestInit): Promise<T>
 export const listarServicos = () => requisicaoApi<Servico[]>('/servicos');
 export const criarServico = (dados: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>) =>
   requisicaoApi<Servico>('/servicos', { method: 'POST', body: JSON.stringify(dados) });
+export const atualizarServico = (id: number, dados: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>) =>
+  requisicaoApi<Servico>(`/servicos/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
 export const atualizarStatusServico = (id: number, status: StatusServico) =>
   requisicaoApi<Servico>(`/servicos/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 export const excluirServico = (id: number) =>
@@ -118,6 +156,10 @@ export const excluirServico = (id: number) =>
 export const listarCatalogo = () => requisicaoApi<BicicletaCatalogo[]>('/catalogo');
 export const criarItemCatalogo = (dados: Omit<BicicletaCatalogo, 'id'>) =>
   requisicaoApi<BicicletaCatalogo>('/catalogo', { method: 'POST', body: JSON.stringify(dados) });
+export const atualizarBicicletaCatalogo = (id: number, dados: Omit<BicicletaCatalogo, 'id'>) =>
+  requisicaoApi<BicicletaCatalogo>(`/catalogo/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
+export const excluirBicicletaCatalogo = (id: number) =>
+  requisicaoApi<void>(`/catalogo/${id}`, { method: 'DELETE' });
 
 export const listarUsuarios = () => requisicaoApi<Usuario[]>('/usuarios');
 export const salvarUsuario = (dados: Omit<Usuario, 'id'> | Usuario) =>

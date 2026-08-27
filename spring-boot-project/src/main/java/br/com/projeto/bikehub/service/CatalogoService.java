@@ -4,6 +4,9 @@ import br.com.projeto.bikehub.entity.BicicletaCatalogo;
 import br.com.projeto.bikehub.entity.BicicletaCatalogo.FaixaEtaria;
 import br.com.projeto.bikehub.entity.BicicletaCatalogo.TipoOperacao;
 import br.com.projeto.bikehub.repository.BicicletaCatalogoRepository;
+import br.com.projeto.bikehub.repository.AluguelRepository;
+import br.com.projeto.bikehub.repository.VendaRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +29,16 @@ import java.util.Optional;
 public class CatalogoService {
 
     private final BicicletaCatalogoRepository catalogoRepository;
+    private final VendaRepository vendaRepository;
+    private final AluguelRepository aluguelRepository;
 
     @Autowired
-    public CatalogoService(BicicletaCatalogoRepository catalogoRepository) {
+    public CatalogoService(BicicletaCatalogoRepository catalogoRepository,
+                           VendaRepository vendaRepository,
+                           AluguelRepository aluguelRepository) {
         this.catalogoRepository = catalogoRepository;
+        this.vendaRepository = vendaRepository;
+        this.aluguelRepository = aluguelRepository;
     }
 
     /** Retorna todos os itens do catálogo para consumo da API React. */
@@ -82,6 +91,40 @@ public class CatalogoService {
     @Transactional
     public BicicletaCatalogo salvar(BicicletaCatalogo item) {
         return catalogoRepository.save(item);
+    }
+
+    /** Atualiza todos os dados editáveis do item sem criar um novo registro. */
+    @Transactional
+    public BicicletaCatalogo atualizar(Long id, String marca, String modelo, String cor, Integer ano,
+                                       FaixaEtaria faixaEtaria, TipoOperacao tipoOperacao,
+                                       BigDecimal valor, Boolean disponivel, String imagemUrl,
+                                       String descricao) {
+        BicicletaCatalogo item = catalogoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Item do catálogo não encontrado com ID: " + id));
+        item.setMarca(marca.trim());
+        item.setModelo(modelo.trim());
+        item.setCor(cor.trim());
+        item.setAno(ano);
+        item.setFaixaEtaria(faixaEtaria);
+        item.setTipoOperacao(tipoOperacao);
+        item.setValor(valor);
+        item.setDisponivel(disponivel == null ? item.getDisponivel() : disponivel);
+        item.setImagemUrl(imagemUrl == null || imagemUrl.isBlank() ? null : imagemUrl.trim());
+        item.setDescricao(descricao == null || descricao.isBlank() ? null : descricao.trim());
+        return catalogoRepository.save(item);
+    }
+
+    /** Exclui um item somente quando ele não compõe o histórico comercial. */
+    @Transactional
+    public void excluir(Long id) {
+        if (!catalogoRepository.existsById(id)) {
+            throw new IllegalArgumentException("Item do catálogo não encontrado com ID: " + id);
+        }
+        if (vendaRepository.existsByBicicletaId(id) || aluguelRepository.existsByBicicletaId(id)) {
+            throw new DataIntegrityViolationException(
+                    "Não é possível excluir a bicicleta porque ela possui venda ou aluguel vinculado ao histórico.");
+        }
+        catalogoRepository.deleteById(id);
     }
 
     /**

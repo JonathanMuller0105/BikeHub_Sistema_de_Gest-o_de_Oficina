@@ -18,6 +18,8 @@ import java.util.List;
 @Repository
 public interface ServicoRepository extends JpaRepository<Servico, Long> {
 
+    boolean existsByBicicletaId(Long bicicletaId);
+
     /**
      * Retorna todas as ordens de serviço com um status específico.
      *

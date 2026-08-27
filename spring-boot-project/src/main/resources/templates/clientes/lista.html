@@ -132,6 +132,7 @@
                                         <a th:href="@{/servicos/novo(clienteId=${c.id})}" class="btn-action-primary" title="Abrir OS para este cliente">
                                             + Abrir OS
                                         </a>
+                                        <a th:href="@{/clientes/{id}/editar(id=${c.id})}" class="btn-icon" title="Editar cliente">Editar</a>
                                         <a th:href="@{/clientes/excluir/{id}(id=${c.id})}" 
                                            class="btn-action-danger" 
                                            title="Excluir Cliente"

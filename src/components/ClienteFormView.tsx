@@ -5,33 +5,49 @@
  * ======================================================================
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Save, User, Bike, Check } from 'lucide-react';
 import { Cliente, Bicicleta, AbaNavegacao } from '../types';
 
 interface ClienteFormViewProps {
   onSalvarClienteIntegrado: (cliente: Omit<Cliente, 'id' | 'dataCadastro'>, bicicleta: Omit<Bicicleta, 'id' | 'clienteId'>) => void;
   onNavegar: (aba: AbaNavegacao) => void;
+  clienteEmEdicao?: Cliente | null;
+  onAtualizarCliente: (id: number, cliente: Omit<Cliente, 'id' | 'dataCadastro'>, bicicleta: Omit<Bicicleta, 'clienteId'>) => void;
 }
 
 export const ClienteFormView: React.FC<ClienteFormViewProps> = ({
   onSalvarClienteIntegrado,
   onNavegar,
+  clienteEmEdicao = null,
+  onAtualizarCliente,
 }) => {
+  const bicicletaInicial = clienteEmEdicao?.bicicletas?.[0];
   // Seção 1: Cliente
-  const [nome, setNome] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [email, setEmail] = useState('');
-  const [cpf, setCpf] = useState('');
+  const [nome, setNome] = useState(clienteEmEdicao?.nome ?? '');
+  const [telefone, setTelefone] = useState(clienteEmEdicao?.telefone ?? '');
+  const [email, setEmail] = useState(clienteEmEdicao?.email ?? '');
+  const [cpf, setCpf] = useState(clienteEmEdicao?.cpf ?? '');
 
   // Seção 2: Bicicleta
-  const [marca, setMarca] = useState('');
-  const [modelo, setModelo] = useState('');
-  const [cor, setCor] = useState('');
-  const [ano, setAno] = useState(2023);
-  const [numeroSerie, setNumeroSerie] = useState('');
+  const [bicicletaId, setBicicletaId] = useState<number | undefined>(bicicletaInicial?.id);
+  const [marca, setMarca] = useState(bicicletaInicial?.marca ?? '');
+  const [modelo, setModelo] = useState(bicicletaInicial?.modelo ?? '');
+  const [cor, setCor] = useState(bicicletaInicial?.cor ?? '');
+  const [ano, setAno] = useState(bicicletaInicial?.ano ?? 2023);
+  const [numeroSerie, setNumeroSerie] = useState(bicicletaInicial?.numeroSerie ?? '');
 
   const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    const bicicleta = clienteEmEdicao?.bicicletas.find((item) => item.id === bicicletaId);
+    if (!bicicleta) return;
+    setMarca(bicicleta.marca);
+    setModelo(bicicleta.modelo);
+    setCor(bicicleta.cor);
+    setAno(bicicleta.ano);
+    setNumeroSerie(bicicleta.numeroSerie ?? '');
+  }, [bicicletaId, clienteEmEdicao]);
 
   // Máscara dinâmica de telefone brasileiro (XX) XXXXX-XXXX
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,22 +87,28 @@ export const ClienteFormView: React.FC<ClienteFormViewProps> = ({
       return;
     }
 
-    onSalvarClienteIntegrado(
-      {
+    const dadosCliente = {
         nome,
         telefone,
         email,
         cpf: cpf || undefined,
         bicicletas: [],
-      },
-      {
+      };
+    const dadosBicicleta = {
+        id: bicicletaId ?? 0,
         marca,
         modelo,
         cor: cor || 'Não especificada',
         ano: Number(ano) || 2023,
         numeroSerie: numeroSerie || undefined,
-      }
-    );
+      };
+
+    if (clienteEmEdicao) {
+      onAtualizarCliente(clienteEmEdicao.id, dadosCliente, dadosBicicleta);
+    } else {
+      const { id: _id, ...novaBicicleta } = dadosBicicleta;
+      onSalvarClienteIntegrado(dadosCliente, novaBicicleta);
+    }
   };
 
   return (
@@ -102,7 +124,7 @@ export const ClienteFormView: React.FC<ClienteFormViewProps> = ({
             <span>Voltar para Lista de Clientes</span>
           </button>
           <h1 className="text-2xl sm:text-3xl font-black text-[#2C3E50] dark:text-white tracking-tight">
-            Cadastro Integrado de Cliente e Bicicleta
+            {clienteEmEdicao ? `Editar Cliente #${clienteEmEdicao.id}` : 'Cadastro Integrado de Cliente e Bicicleta'}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Cadastre os dados pessoais do proprietário e as especificações técnicas da bicicleta na mesma tela
@@ -206,6 +228,14 @@ export const ClienteFormView: React.FC<ClienteFormViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {clienteEmEdicao && clienteEmEdicao.bicicletas.length > 1 && (
+              <div className="sm:col-span-3">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Bicicleta a editar</label>
+                <select value={bicicletaId} onChange={(e) => setBicicletaId(Number(e.target.value))} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                  {clienteEmEdicao.bicicletas.map((bike) => <option key={bike.id} value={bike.id}>{bike.marca} {bike.modelo} (#{bike.id})</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                 Marca do Fabricante <span className="text-red-500">*</span>
@@ -290,7 +320,7 @@ export const ClienteFormView: React.FC<ClienteFormViewProps> = ({
             className="px-6 py-2.5 bg-[#E67E22] hover:bg-[#D35400] text-white font-bold text-sm rounded-xl shadow-lg shadow-orange-500/25 flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>Salvar Cadastro Integrado</span>
+            <span>{clienteEmEdicao ? 'Salvar Alterações' : 'Salvar Cadastro Integrado'}</span>
           </button>
         </div>
       </form>

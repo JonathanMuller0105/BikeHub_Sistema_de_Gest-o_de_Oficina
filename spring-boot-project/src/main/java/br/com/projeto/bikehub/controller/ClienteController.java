@@ -82,6 +82,18 @@ public class ClienteController {
         return "clientes/formulario";
     }
 
+    @GetMapping("/{id}/editar")
+    public String editar(@PathVariable Long id, HttpSession session, Model model) {
+        if (!usuarioService.isUsuarioLogado(session)) return "redirect:/login";
+        Cliente cliente = clienteService.buscarPorIdComBicicletas(id)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado."));
+        model.addAttribute("cliente", cliente);
+        model.addAttribute("bicicleta", cliente.getBicicletas().stream().findFirst().orElse(null));
+        model.addAttribute("usuarioLogado", usuarioService.getUsuarioLogado(session));
+        model.addAttribute("modoEdicao", true);
+        return "clientes/formulario";
+    }
+
     /**
      * Processa o salvamento do cadastro unificado com validação Bean Validation (@Valid).
      *
@@ -120,14 +132,17 @@ public class ClienteController {
 
         try {
             // Executa o cadastro integrado no serviço
-            clienteService.salvarCadastroIntegrado(
-                    cliente,
-                    marcaBicicleta,
-                    modeloBicicleta,
-                    corBicicleta,
-                    anoBicicleta,
-                    numeroSerie
-            );
+            if (cliente.getId() != null) {
+                Cliente existente = clienteService.buscarPorIdComBicicletas(cliente.getId())
+                        .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado."));
+                Long bicicletaId = existente.getBicicletas().stream().findFirst().map(b -> b.getId()).orElse(null);
+                clienteService.atualizarCadastroIntegrado(cliente.getId(), cliente.getNome(), cliente.getTelefone(),
+                        cliente.getEmail(), cliente.getCpf(), bicicletaId, marcaBicicleta, modeloBicicleta,
+                        corBicicleta, anoBicicleta, numeroSerie);
+            } else {
+                clienteService.salvarCadastroIntegrado(cliente, marcaBicicleta, modeloBicicleta,
+                        corBicicleta, anoBicicleta, numeroSerie);
+            }
 
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Cliente e bicicleta cadastrados com sucesso!");
             return "redirect:/clientes";

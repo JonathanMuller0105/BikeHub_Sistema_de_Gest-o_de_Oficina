@@ -48,11 +48,17 @@ import { SpringCodeViewer } from './components/SpringCodeViewer';
 import { useTheme } from './hooks/useTheme';
 import {
   alternarStatusUsuario,
+  atualizarBicicletaCliente,
+  atualizarCliente,
+  atualizarServico,
+  atualizarBicicletaCatalogo,
   atualizarStatusServico,
   criarCliente,
   criarItemCatalogo,
   criarServico,
   excluirCliente,
+  excluirBicicletaCliente,
+  excluirBicicletaCatalogo,
   excluirServico,
   excluirUsuario,
   listarAlugueis,
@@ -110,6 +116,8 @@ export default function App() {
   
   // Cliente pré-selecionado para abertura direta de OS
   const [clientePreSelecionadoOS, setClientePreSelecionadoOS] = useState<number | null>(null);
+  const [clienteEmEdicao, setClienteEmEdicao] = useState<Cliente | null>(null);
+  const [servicoEmEdicao, setServicoEmEdicao] = useState<Servico | null>(null);
 
   // Mensagem flash de notificação
   const [notificacao, setNotificacao] = useState<string | null>(null);
@@ -190,6 +198,49 @@ export default function App() {
       });
   };
 
+  const handleAtualizarCliente = (
+    id: number,
+    cliente: Omit<Cliente, 'id' | 'dataCadastro'>,
+    bicicleta: Omit<Bicicleta, 'clienteId'>
+  ) => {
+    atualizarCliente(id, {
+      cliente,
+      bicicleta,
+      bicicletaId: bicicleta.id || undefined,
+    })
+      .then((atualizado) => {
+        setClientes((atuais) => atuais.map((item) => item.id === id ? atualizado : item));
+        setClienteEmEdicao(null);
+        setAbaAtiva('clientes');
+        dispararNotificacao(`Cliente "${atualizado.nome}" atualizado com sucesso!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar cliente: ${erro.message}`));
+  };
+
+  const handleAtualizarBicicletaCliente = (bicicletaId: number, dados: Omit<Bicicleta, 'id' | 'clienteId'>) => {
+    atualizarBicicletaCliente(bicicletaId, dados)
+      .then((bicicletaAtualizada) => {
+        setClientes((atuais) => atuais.map((cliente) =>
+          cliente.id === bicicletaAtualizada.clienteId
+            ? { ...cliente, bicicletas: cliente.bicicletas.map((bike) => bike.id === bicicletaId ? bicicletaAtualizada : bike) }
+            : cliente));
+        dispararNotificacao('Bicicleta atualizada com sucesso!');
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar bicicleta: ${erro.message}`));
+  };
+
+  const handleExcluirBicicletaCliente = (clienteId: number, bicicletaId: number) => {
+    excluirBicicletaCliente(bicicletaId)
+      .then(() => {
+        setClientes((atuais) => atuais.map((cliente) =>
+          cliente.id === clienteId
+            ? { ...cliente, bicicletas: cliente.bicicletas.filter((bike) => bike.id !== bicicletaId) }
+            : cliente));
+        dispararNotificacao('Bicicleta removida do cliente com sucesso!');
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao excluir bicicleta: ${erro.message}`));
+  };
+
   // Handler para Abrir OS Direta para Cliente
   const handleAbrirOSParaCliente = (clienteId: number) => {
     setClientePreSelecionadoOS(clienteId);
@@ -208,6 +259,20 @@ export default function App() {
         dispararNotificacao(`Ordem de Serviço #${osCriada.id} aberta com sucesso!`);
       })
       .catch((erro: Error) => dispararNotificacao(`Erro ao abrir OS: ${erro.message}`));
+  };
+
+  const handleAtualizarOS = (
+    id: number,
+    dados: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>
+  ) => {
+    atualizarServico(id, dados)
+      .then((atualizado) => {
+        setServicos((atuais) => atuais.map((item) => item.id === id ? atualizado : item));
+        setServicoEmEdicao(null);
+        setAbaAtiva('servicos');
+        dispararNotificacao(`Ordem de Serviço #${id} atualizada com sucesso!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar OS: ${erro.message}`));
   };
 
   // Handler para Atualizar Status de OS
@@ -347,6 +412,24 @@ export default function App() {
       .catch((erro: Error) => dispararNotificacao(`Erro ao cadastrar bicicleta: ${erro.message}`));
   };
 
+  const handleAtualizarBicicletaCatalogo = (id: number, dados: Omit<BicicletaCatalogo, 'id'>) => {
+    atualizarBicicletaCatalogo(id, dados)
+      .then((atualizado) => {
+        setCatalogo((atual) => atual.map((item) => item.id === id ? atualizado : item));
+        dispararNotificacao(`Bicicleta "${atualizado.marca} ${atualizado.modelo}" atualizada com sucesso!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar bicicleta: ${erro.message}`));
+  };
+
+  const handleExcluirBicicletaCatalogo = (id: number) => {
+    excluirBicicletaCatalogo(id)
+      .then(() => {
+        setCatalogo((atual) => atual.filter((item) => item.id !== id));
+        dispararNotificacao('Bicicleta removida do catálogo com sucesso!');
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao excluir bicicleta: ${erro.message}`));
+  };
+
   // Handler para Locação Simples / Devolução
   const handleAlternarLocacao = (bikeId: number, alugar: boolean) => {
     setCatalogo(
@@ -403,6 +486,8 @@ export default function App() {
         abaAtiva={abaAtiva}
         onNavegar={(aba) => {
           if (aba === 'servicos') setClientePreSelecionadoOS(null);
+          setClienteEmEdicao(null);
+          setServicoEmEdicao(null);
           setAbaAtiva(aba);
         }}
         usuario={usuarioLogado}
@@ -449,7 +534,11 @@ export default function App() {
             clientes={clientes}
             servicos={servicos}
             catalogo={catalogo}
-            onNavegar={setAbaAtiva}
+            onNavegar={(aba) => {
+              setClienteEmEdicao(null);
+              setServicoEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
             onAtualizarStatusOS={handleAtualizarStatusOS}
           />
         )}
@@ -457,25 +546,46 @@ export default function App() {
         {abaAtiva === 'clientes' && (
           <ClientesView
             clientes={clientes}
-            onNavegar={setAbaAtiva}
+            onNavegar={(aba) => {
+              setClienteEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
             onExcluirCliente={handleExcluirCliente}
             onAbrirOSParaCliente={handleAbrirOSParaCliente}
+            onEditarCliente={(cliente) => {
+              setClienteEmEdicao(cliente);
+              setAbaAtiva('cliente-novo');
+            }}
+            onAtualizarBicicleta={handleAtualizarBicicletaCliente}
+            onExcluirBicicleta={handleExcluirBicicletaCliente}
           />
         )}
 
         {abaAtiva === 'cliente-novo' && (
           <ClienteFormView
             onSalvarClienteIntegrado={handleSalvarClienteIntegrado}
-            onNavegar={setAbaAtiva}
+            clienteEmEdicao={clienteEmEdicao}
+            onAtualizarCliente={handleAtualizarCliente}
+            onNavegar={(aba) => {
+              setClienteEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
           />
         )}
 
         {abaAtiva === 'servicos' && (
           <ServicosView
             servicos={servicos}
-            onNavegar={setAbaAtiva}
+            onNavegar={(aba) => {
+              setServicoEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
             onAtualizarStatusOS={handleAtualizarStatusOS}
             onExcluirOS={handleExcluirOS}
+            onEditarOS={(servico) => {
+              setServicoEmEdicao(servico);
+              setAbaAtiva('servico-novo');
+            }}
           />
         )}
 
@@ -484,7 +594,12 @@ export default function App() {
             clientes={clientes}
             clientePreSelecionadoId={clientePreSelecionadoOS}
             onSalvarOS={handleSalvarOS}
-            onNavegar={setAbaAtiva}
+            servicoEmEdicao={servicoEmEdicao}
+            onAtualizarOS={handleAtualizarOS}
+            onNavegar={(aba) => {
+              setServicoEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
           />
         )}
 
@@ -505,6 +620,8 @@ export default function App() {
             vendas={vendas}
             onRegistrarNovaVenda={handleRegistrarNovaVenda}
             onCadastrarNovaBicicleta={handleCadastrarNovaBicicleta}
+            onAtualizarBicicleta={handleAtualizarBicicletaCatalogo}
+            onExcluirBicicleta={handleExcluirBicicletaCatalogo}
           />
         )}
 
@@ -518,6 +635,8 @@ export default function App() {
             onDevolverAluguel={handleDevolverAluguel}
             onDevolverAluguelComVistoria={handleDevolverAluguelComVistoria}
             onCadastrarNovaBicicleta={handleCadastrarNovaBicicleta}
+            onAtualizarBicicleta={handleAtualizarBicicletaCatalogo}
+            onExcluirBicicleta={handleExcluirBicicletaCatalogo}
           />
         )}
 
