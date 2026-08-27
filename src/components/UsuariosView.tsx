@@ -22,13 +22,14 @@ import {
   Trash2, 
   CheckCircle2, 
   AlertCircle,
-  Key
+  Key,
+  Pencil
 } from 'lucide-react';
 import { Usuario, PerfilUsuario } from '../types';
 
 interface UsuariosViewProps {
   usuarios?: Usuario[];
-  onSalvarUsuario: (novoUsuario: Omit<Usuario, 'id'>) => void;
+  onSalvarUsuario: (usuario: Omit<Usuario, 'id'> | Usuario) => void;
   onAlternarStatusUsuario?: (id: number) => void;
   onAlternarStatus?: (id: number) => void;
   onExcluirUsuario: (id: number) => void;
@@ -46,6 +47,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
   const [filtroPerfil, setFiltroPerfil] = useState<string>('TODOS');
   const [termoBusca, setTermoBusca] = useState('');
   const [modalNovoAberto, setModalNovoAberto] = useState(false);
+  const [usuarioEmEdicao, setUsuarioEmEdicao] = useState<Usuario | null>(null);
 
   // Form State
   const [nomeCompleto, setNomeCompleto] = useState('');
@@ -107,7 +109,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
       setErroForm('Informe o login/usuário de acesso.');
       return;
     }
-    if (usuarios.some((u) => u.login.toLowerCase() === login.trim().toLowerCase())) {
+    if (usuarios.some((u) => u.id !== usuarioEmEdicao?.id && u.login.toLowerCase() === login.trim().toLowerCase())) {
       setErroForm('Este login de acesso já está em uso por outro funcionário.');
       return;
     }
@@ -115,11 +117,11 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
       setErroForm('Informe o cargo ou especialidade.');
       return;
     }
-    if (!senha) {
+    if (!usuarioEmEdicao && !senha) {
       setErroForm('Digite a senha inicial de acesso.');
       return;
     }
-    if (senha.length < 4) {
+    if (senha && senha.length < 4) {
       setErroForm('A senha deve conter no mínimo 4 caracteres.');
       return;
     }
@@ -129,15 +131,16 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
     }
 
     onSalvarUsuario({
+      ...(usuarioEmEdicao ? { id: usuarioEmEdicao.id } : {}),
       nomeCompleto: nomeCompleto.trim(),
       login: login.trim(),
-      senha,
+      senha: senha || undefined,
       email: email.trim() || `${login.trim().toLowerCase()}@bikehub.com.br`,
       telefone: telefone.trim() || '(11) 98000-0000',
       cargo: cargo.trim(),
       perfil,
-      ativo: true,
-      dataCadastro: new Date().toISOString().split('T')[0],
+      ativo: usuarioEmEdicao?.ativo ?? true,
+      dataCadastro: usuarioEmEdicao?.dataCadastro ?? new Date().toISOString().split('T')[0],
     });
 
     // Limpar form
@@ -151,6 +154,32 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
     setConfirmacaoSenha('');
     setErroForm('');
     setModalNovoAberto(false);
+    setUsuarioEmEdicao(null);
+  };
+
+  const abrirNovoUsuario = () => {
+    setUsuarioEmEdicao(null);
+    setNomeCompleto(''); setLogin(''); setEmail(''); setTelefone(''); setCargo('');
+    setPerfil('MECANICO'); setSenha(''); setConfirmacaoSenha(''); setErroForm('');
+    setModalNovoAberto(true);
+  };
+
+  const abrirEdicaoUsuario = (usuario: Usuario) => {
+    setUsuarioEmEdicao(usuario);
+    setNomeCompleto(usuario.nomeCompleto);
+    setLogin(usuario.login);
+    setEmail(usuario.email ?? '');
+    setTelefone(usuario.telefone ?? '');
+    setCargo(usuario.cargo ?? '');
+    setPerfil(usuario.perfil);
+    setSenha(''); setConfirmacaoSenha(''); setErroForm('');
+    setModalNovoAberto(true);
+  };
+
+  const fecharModal = () => {
+    setModalNovoAberto(false);
+    setUsuarioEmEdicao(null);
+    setErroForm('');
   };
 
   const totalAdmins = listaUsuarios.filter((u) => u.perfil === 'ADMIN').length;
@@ -170,7 +199,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
           </p>
         </div>
         <button
-          onClick={() => setModalNovoAberto(true)}
+          onClick={abrirNovoUsuario}
           className="px-4 py-2.5 bg-[#E67E22] hover:bg-[#D35400] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-orange-500/20 flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
         >
           <UserPlus className="w-4 h-4" />
@@ -333,6 +362,13 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
                 <span className="text-[11px] text-slate-400 dark:text-slate-500">
                   Cadastrado em {u.dataCadastro || '2026-08-01'}
                 </span>
+                <button
+                  onClick={() => abrirEdicaoUsuario(u)}
+                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-xl transition-colors cursor-pointer"
+                  title="Editar usuário"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
                 
                 {usuarios.length > 1 && (
                   <button
@@ -374,12 +410,12 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-white">Cadastrar Novo Colaborador</h2>
+                  <h2 className="text-lg font-black text-white">{usuarioEmEdicao ? `Editar Colaborador #${usuarioEmEdicao.id}` : 'Cadastrar Novo Colaborador'}</h2>
                   <p className="text-xs text-slate-300">Crie o perfil de acesso e credenciais para o sistema</p>
                 </div>
               </div>
               <button
-                onClick={() => setModalNovoAberto(false)}
+                onClick={fecharModal}
                 className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -498,28 +534,28 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Senha de Acesso <span className="text-red-500">*</span>
+                    Senha de Acesso {!usuarioEmEdicao && <span className="text-red-500">*</span>}
                   </label>
                   <input
                     type="password"
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
-                    placeholder="••••••••"
-                    required
+                    placeholder={usuarioEmEdicao ? 'Deixe vazio para manter a senha' : '••••••••'}
+                    required={!usuarioEmEdicao}
                     className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E67E22] focus:bg-white dark:focus:bg-slate-900"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Confirmar Senha <span className="text-red-500">*</span>
+                    Confirmar Senha {!usuarioEmEdicao && <span className="text-red-500">*</span>}
                   </label>
                   <input
                     type="password"
                     value={confirmacaoSenha}
                     onChange={(e) => setConfirmacaoSenha(e.target.value)}
                     placeholder="••••••••"
-                    required
+                    required={!usuarioEmEdicao}
                     className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E67E22] focus:bg-white dark:focus:bg-slate-900"
                   />
                 </div>
@@ -528,7 +564,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setModalNovoAberto(false)}
+                  onClick={fecharModal}
                   className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl cursor-pointer"
                 >
                   Cancelar
@@ -538,7 +574,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
                   className="px-5 py-2.5 bg-[#E67E22] hover:bg-[#D35400] text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/25 flex items-center gap-2 transition-all cursor-pointer"
                 >
                   <UserPlus className="w-4 h-4" />
-                  <span>Salvar Usuário</span>
+                  <span>{usuarioEmEdicao ? 'Salvar Alterações' : 'Salvar Usuário'}</span>
                 </button>
               </div>
             </form>
