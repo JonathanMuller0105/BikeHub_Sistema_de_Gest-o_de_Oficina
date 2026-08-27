@@ -14,6 +14,8 @@ interface ServicoFormViewProps {
   clientes?: Cliente[];
   clientePreSelecionadoId?: number | null;
   onSalvarOS: (novaOS: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>) => void;
+  servicoEmEdicao?: Servico | null;
+  onAtualizarOS: (id: number, dados: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>) => void;
   onNavegar: (aba: AbaNavegacao) => void;
 }
 
@@ -21,18 +23,21 @@ export const ServicoFormView: React.FC<ServicoFormViewProps> = ({
   clientes = [],
   clientePreSelecionadoId,
   onSalvarOS,
+  servicoEmEdicao = null,
+  onAtualizarOS,
   onNavegar,
 }) => {
-  const [clienteId, setClienteId] = useState<number | ''>(clientePreSelecionadoId || '');
-  const [bicicletaId, setBicicletaId] = useState<number | ''>('');
-  const [descricao, setDescricao] = useState('');
-  const [valor, setValor] = useState('');
+  const [clienteId, setClienteId] = useState<number | ''>(servicoEmEdicao?.clienteId ?? clientePreSelecionadoId ?? '');
+  const [bicicletaId, setBicicletaId] = useState<number | ''>(servicoEmEdicao?.bicicletaId ?? '');
+  const [descricao, setDescricao] = useState(servicoEmEdicao?.descricao ?? '');
+  const [valor, setValor] = useState(servicoEmEdicao ? String(servicoEmEdicao.valor) : '');
   const [dataEntrega, setDataEntrega] = useState(() => {
+    if (servicoEmEdicao) return servicoEmEdicao.dataEntrega;
     const data = new Date();
     data.setDate(data.getDate() + 3);
     return data.toISOString().split('T')[0];
   });
-  const [status, setStatus] = useState<StatusServico>('PENDENTE');
+  const [status, setStatus] = useState<StatusServico>(servicoEmEdicao?.status ?? 'PENDENTE');
   const [erro, setErro] = useState('');
 
   // Localiza o cliente atualmente selecionado para extrair suas bicicletas
@@ -41,12 +46,14 @@ export const ServicoFormView: React.FC<ServicoFormViewProps> = ({
 
   // Se o cliente mudar, ajusta a primeira bicicleta automaticamente se existir
   useEffect(() => {
-    if (bicicletasDisponiveis.length > 0) {
+    if (servicoEmEdicao && Number(clienteId) === servicoEmEdicao.clienteId) {
+      setBicicletaId(servicoEmEdicao.bicicletaId);
+    } else if (bicicletasDisponiveis.length > 0) {
       setBicicletaId(bicicletasDisponiveis[0].id);
     } else {
       setBicicletaId('');
     }
-  }, [clienteId]);
+  }, [clienteId, servicoEmEdicao]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +74,7 @@ export const ServicoFormView: React.FC<ServicoFormViewProps> = ({
       return;
     }
 
-    onSalvarOS({
+    const dados = {
       clienteId: Number(clienteId),
       bicicletaId: Number(bicicletaId),
       descricao,
@@ -75,7 +82,9 @@ export const ServicoFormView: React.FC<ServicoFormViewProps> = ({
       dataEntrada: new Date().toISOString().split('T')[0],
       dataEntrega,
       status,
-    });
+    };
+    if (servicoEmEdicao) onAtualizarOS(servicoEmEdicao.id, dados);
+    else onSalvarOS(dados);
   };
 
   return (
@@ -90,7 +99,7 @@ export const ServicoFormView: React.FC<ServicoFormViewProps> = ({
           <span>Voltar para Lista de OS</span>
         </button>
         <h1 className="text-2xl sm:text-3xl font-black text-[#2C3E50] dark:text-white tracking-tight">
-          Abertura de Ordem de Serviço (Oficina)
+          {servicoEmEdicao ? `Editar Ordem de Serviço #${servicoEmEdicao.id}` : 'Abertura de Ordem de Serviço (Oficina)'}
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Selecione o cliente, a bicicleta e registre os serviços e peças de manutenção
@@ -127,6 +136,7 @@ export const ServicoFormView: React.FC<ServicoFormViewProps> = ({
                 value={clienteId}
                 onChange={(e) => setClienteId(Number(e.target.value) || '')}
                 required
+                disabled={Boolean(servicoEmEdicao)}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#E67E22] focus:bg-white dark:focus:bg-slate-900 cursor-pointer"
               >
                 <option value="">-- Selecione o Cliente --</option>
@@ -146,7 +156,7 @@ export const ServicoFormView: React.FC<ServicoFormViewProps> = ({
                 value={bicicletaId}
                 onChange={(e) => setBicicletaId(Number(e.target.value) || '')}
                 required
-                disabled={!clienteId || bicicletasDisponiveis.length === 0}
+                disabled={Boolean(servicoEmEdicao) || !clienteId || bicicletasDisponiveis.length === 0}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#E67E22] focus:bg-white dark:focus:bg-slate-900 cursor-pointer disabled:opacity-50"
               >
                 <option value="">
@@ -259,7 +269,7 @@ export const ServicoFormView: React.FC<ServicoFormViewProps> = ({
             className="px-6 py-2.5 bg-[#E67E22] hover:bg-[#D35400] text-white font-bold text-sm rounded-xl shadow-lg shadow-orange-500/25 flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>Abrir Ordem de Serviço</span>
+            <span>{servicoEmEdicao ? 'Salvar Alterações' : 'Abrir Ordem de Serviço'}</span>
           </button>
         </div>
       </form>

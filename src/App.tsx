@@ -49,6 +49,7 @@ import { useTheme } from './hooks/useTheme';
 import {
   alternarStatusUsuario,
   atualizarCliente,
+  atualizarServico,
   atualizarStatusServico,
   criarCliente,
   criarItemCatalogo,
@@ -112,6 +113,7 @@ export default function App() {
   // Cliente pré-selecionado para abertura direta de OS
   const [clientePreSelecionadoOS, setClientePreSelecionadoOS] = useState<number | null>(null);
   const [clienteEmEdicao, setClienteEmEdicao] = useState<Cliente | null>(null);
+  const [servicoEmEdicao, setServicoEmEdicao] = useState<Servico | null>(null);
 
   // Mensagem flash de notificação
   const [notificacao, setNotificacao] = useState<string | null>(null);
@@ -229,6 +231,20 @@ export default function App() {
         dispararNotificacao(`Ordem de Serviço #${osCriada.id} aberta com sucesso!`);
       })
       .catch((erro: Error) => dispararNotificacao(`Erro ao abrir OS: ${erro.message}`));
+  };
+
+  const handleAtualizarOS = (
+    id: number,
+    dados: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>
+  ) => {
+    atualizarServico(id, dados)
+      .then((atualizado) => {
+        setServicos((atuais) => atuais.map((item) => item.id === id ? atualizado : item));
+        setServicoEmEdicao(null);
+        setAbaAtiva('servicos');
+        dispararNotificacao(`Ordem de Serviço #${id} atualizada com sucesso!`);
+      })
+      .catch((erro: Error) => dispararNotificacao(`Erro ao atualizar OS: ${erro.message}`));
   };
 
   // Handler para Atualizar Status de OS
@@ -424,6 +440,8 @@ export default function App() {
         abaAtiva={abaAtiva}
         onNavegar={(aba) => {
           if (aba === 'servicos') setClientePreSelecionadoOS(null);
+          setClienteEmEdicao(null);
+          setServicoEmEdicao(null);
           setAbaAtiva(aba);
         }}
         usuario={usuarioLogado}
@@ -470,7 +488,11 @@ export default function App() {
             clientes={clientes}
             servicos={servicos}
             catalogo={catalogo}
-            onNavegar={setAbaAtiva}
+            onNavegar={(aba) => {
+              setClienteEmEdicao(null);
+              setServicoEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
             onAtualizarStatusOS={handleAtualizarStatusOS}
           />
         )}
@@ -478,7 +500,10 @@ export default function App() {
         {abaAtiva === 'clientes' && (
           <ClientesView
             clientes={clientes}
-            onNavegar={setAbaAtiva}
+            onNavegar={(aba) => {
+              setClienteEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
             onExcluirCliente={handleExcluirCliente}
             onAbrirOSParaCliente={handleAbrirOSParaCliente}
             onEditarCliente={(cliente) => {
@@ -503,9 +528,16 @@ export default function App() {
         {abaAtiva === 'servicos' && (
           <ServicosView
             servicos={servicos}
-            onNavegar={setAbaAtiva}
+            onNavegar={(aba) => {
+              setServicoEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
             onAtualizarStatusOS={handleAtualizarStatusOS}
             onExcluirOS={handleExcluirOS}
+            onEditarOS={(servico) => {
+              setServicoEmEdicao(servico);
+              setAbaAtiva('servico-novo');
+            }}
           />
         )}
 
@@ -514,7 +546,12 @@ export default function App() {
             clientes={clientes}
             clientePreSelecionadoId={clientePreSelecionadoOS}
             onSalvarOS={handleSalvarOS}
-            onNavegar={setAbaAtiva}
+            servicoEmEdicao={servicoEmEdicao}
+            onAtualizarOS={handleAtualizarOS}
+            onNavegar={(aba) => {
+              setServicoEmEdicao(null);
+              setAbaAtiva(aba);
+            }}
           />
         )}
 

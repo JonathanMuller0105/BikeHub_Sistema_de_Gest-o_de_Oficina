@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,6 +47,17 @@ public class ServicoRestController {
         );
         return ResponseEntity.created(URI.create("/api/servicos/" + servico.getId()))
                 .body(ServicoResponse.from(servico));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @Valid @RequestBody ServicoRequest request) {
+        try {
+            Servico atualizado = servicoService.atualizar(
+                    id, request.descricao(), request.valor(), request.dataEntrega());
+            return ResponseEntity.ok(ServicoResponse.from(atualizado));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(404).body(Map.of("mensagem", exception.getMessage()));
+        }
     }
 
     @PatchMapping("/{id}/status")

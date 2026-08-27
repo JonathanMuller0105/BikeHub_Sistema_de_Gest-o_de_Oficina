@@ -15,7 +15,8 @@ import {
   Phone, 
   DollarSign, 
   Search,
-  Filter
+  Filter,
+  Pencil
 } from 'lucide-react';
 import { Servico, StatusServico, AbaNavegacao } from '../types';
 import { STATUS_LISTA } from '../data/initialData';
@@ -25,6 +26,7 @@ interface ServicosViewProps {
   onNavegar: (aba: AbaNavegacao) => void;
   onAtualizarStatusOS: (osId: number, novoStatus: StatusServico) => void;
   onExcluirOS: (osId: number) => void;
+  onEditarOS: (servico: Servico) => void;
 }
 
 export const ServicosView: React.FC<ServicosViewProps> = ({
@@ -32,6 +34,7 @@ export const ServicosView: React.FC<ServicosViewProps> = ({
   onNavegar,
   onAtualizarStatusOS,
   onExcluirOS,
+  onEditarOS,
 }) => {
   const [filtroStatus, setFiltroStatus] = useState<string>('TODOS');
   const [termo, setTermo] = useState('');
@@ -191,6 +194,13 @@ export const ServicosView: React.FC<ServicosViewProps> = ({
                       </select>
                     </td>
                     <td className="py-4 px-4 text-center">
+                      <button
+                        onClick={() => onEditarOS(os)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition-colors cursor-pointer"
+                        title="Editar OS"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => {
                           if (confirm(`Deseja excluir a Ordem de Serviço #${os.id}?`)) {

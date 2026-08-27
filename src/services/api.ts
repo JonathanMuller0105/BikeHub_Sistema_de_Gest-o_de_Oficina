@@ -133,6 +133,8 @@ async function requisicaoApi<T>(caminho: string, init?: RequestInit): Promise<T>
 export const listarServicos = () => requisicaoApi<Servico[]>('/servicos');
 export const criarServico = (dados: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>) =>
   requisicaoApi<Servico>('/servicos', { method: 'POST', body: JSON.stringify(dados) });
+export const atualizarServico = (id: number, dados: Omit<Servico, 'id' | 'clienteNome' | 'clienteTelefone' | 'bicicletaDescricao'>) =>
+  requisicaoApi<Servico>(`/servicos/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
 export const atualizarStatusServico = (id: number, status: StatusServico) =>
   requisicaoApi<Servico>(`/servicos/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 export const excluirServico = (id: number) =>
